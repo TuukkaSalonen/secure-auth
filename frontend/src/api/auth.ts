@@ -138,9 +138,13 @@ export const verifyLoginMFA = async (
   dispatch: AppDispatch
 ) => {
   try {
+    const csrfToken = await getCSRFAccessToken();
     const response = await fetch("http://localhost:5000/api/login/verify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+      },
       credentials: "include",
       body: JSON.stringify({ username, totp_code: totpCode }),
     });

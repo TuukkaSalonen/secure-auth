@@ -13,7 +13,7 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const validateInput = validateRegisterInput(username, password, confirmPassword);
+    const validateInput = await validateRegisterInput(username, password, confirmPassword);
     if (validateInput.success === false) {
       setErrorMessage(validateInput.message);
       return;

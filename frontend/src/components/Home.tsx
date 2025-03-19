@@ -65,7 +65,7 @@ const Home: React.FC = () => {
                   <div>
                     <p>Scan the QR code with your authenticator app:</p>
                     {qrcode && <img src={qrcode} alt="qrcode" />}
-                    <input type="text" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)}/>
+                    <input type="number" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)}/>
                     <button onClick={handleMFASubmit} className={styles.btn}>
                       Submit
                     </button>

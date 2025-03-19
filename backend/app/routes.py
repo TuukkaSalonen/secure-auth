@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 from sqlalchemy import DateTime
 from flask import request, jsonify, send_file
 import io
-from flask_jwt_extended import get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
+from flask_jwt_extended import decode_token, get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
 from . import db
 from . import app 
 from .models import User, UserSession
@@ -18,7 +18,10 @@ def check_token():
     claims = get_jwt()
 
     if not current_user:
-        return jsonify(message="No active session", mfa_enabled=False), 401
+        return jsonify(message="Invalid user"), 401
+    
+    if claims.get('temporary_token', False):
+        return jsonify(message="MFA required"), 403
     
     mfa_enabled = claims.get('mfa_enabled', False)
     return jsonify(user=current_user, mfa_enabled=mfa_enabled), 200
@@ -31,12 +34,17 @@ def refresh():
     claims = get_jwt()
     existing_session = UserSession.query.filter_by(username=current_user).first()
     
+    if not existing_session:
+        return jsonify(message="Session expired, please log in again."), 401
+    
+    request_refresh_token = get_jwt()["jti"]
+
+    if existing_session.refresh_token_jti != request_refresh_token:
+        return jsonify(message="Invalid refresh token"), 401
+    
     if existing_session and existing_session.expires_at < datetime.now():
         delete_session(existing_session)
         existing_session = None
-
-    if not existing_session:
-        return jsonify(message="Session expired, please log in again."), 401
     
     mfa_enabled = claims.get('mfa_enabled', False)
 
@@ -67,7 +75,10 @@ def login():
 
     if user and user.check_password(password):
         if user.mfa_enabled:
-            return jsonify(message="MFA required", mfa_required=True), 403
+            temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
+            response = jsonify(message="MFA required", mfa_required=True)
+            set_access_cookies(response, temp_token)
+            return response, 403
         
         access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled }, expires_delta=timedelta(minutes=15))
         refresh_token = create_refresh_token(identity=username, expires_delta=timedelta(days=7))
@@ -125,27 +136,45 @@ def register():
 
 # Verify MFA with TOTP code
 @app.route('/api/login/verify', methods=['POST'])
+@jwt_required()
 def verify_mfa():
+    current_user = get_jwt_identity()
+    temp_token = get_jwt().get('temporary_token', False)
+    
+    if not temp_token:
+        return jsonify(message="MFA required"), 403
+
     data = request.json
     username = data.get("username", "").strip()
     totp_code = data.get("totp_code")
 
     if not data or not isinstance(data, dict):
         return jsonify(message="Invalid request"), 400
+    print(current_user)
+    if current_user != username:
+        return jsonify(message="Invalid username"), 400
 
     is_valid, message = check_mfa_input(username, totp_code)
     if not is_valid:
         return jsonify(message=message), 400
+    
+    if not temp_token:
+        return jsonify(message="Temp token is required"), 400
+    
+    if current_user != username:
+        return jsonify(message="Invalid username"), 400
     
     user = User.query.filter_by(username=username).first()
 
     if not user:
         return jsonify(message="User not found"), 404
     
-    if not user.mfa_enabled or not user.mfa_secret:
+    if not user.mfa_enabled or not user.mfa_secret_hash:
         return jsonify(message="MFA setup required"), 400
-
-    totp = pyotp.TOTP(user.mfa_secret)
+    
+    decrypted_secret = user.get_mfa_secret()
+    totp = pyotp.TOTP(decrypted_secret)
+    
     if not totp.verify(totp_code):
         return jsonify(message="Invalid MFA code"), 403
     
@@ -155,7 +184,6 @@ def verify_mfa():
     response = jsonify(user=username, mfa_enabled=True)
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
-
     return response, 200
 
 # Enable MFA with setup, generate QR code
@@ -172,7 +200,8 @@ def generate_mfa_qr():
         return jsonify(message="MFA already enabled"), 400
 
     totp = pyotp.TOTP(pyotp.random_base32())
-    user.mfa_secret = totp.secret
+    user.set_mfa_secret(totp.secret)
+
     db.session.commit()
 
     issuer = "Secure Programming Application"
@@ -195,7 +224,7 @@ def verify_mfa_setup():
     if not user:
         return jsonify(message="User not found"), 404
     
-    if not user.mfa_secret:
+    if not user.mfa_secret_hash:
         return jsonify(message="MFA setup required"), 400
 
     data = request.json
@@ -204,8 +233,9 @@ def verify_mfa_setup():
     if not totp_code:
         return jsonify(message="TOTP code is required"), 400
 
-    totp = pyotp.TOTP(user.mfa_secret)
-    
+    decrypted_secret = user.get_mfa_secret()
+    totp = pyotp.TOTP(decrypted_secret)
+
     if totp.verify(totp_code):
         user.mfa_enabled = True
         db.session.commit()
@@ -218,13 +248,19 @@ def verify_mfa_setup():
     
     return jsonify(message="Invalid TOTP code"), 401
 
+# Get the JTI from a refresh token
+def get_jti_from_token(token):
+    decoded_token = decode_token(token)
+    return decoded_token['jti']
+
 # Create a new session
 def create_session(username, access_token, refresh_token=None):
     expires_at = datetime.now() + timedelta(days=7)
+    refresh_token_jti = get_jti_from_token(refresh_token)
     session = UserSession(
         username=username,
         access_token=access_token,
-        refresh_token=refresh_token,
+        refresh_token_jti=refresh_token_jti,
         expires_at=expires_at
     )
     db.session.add(session)
@@ -234,7 +270,6 @@ def create_session(username, access_token, refresh_token=None):
 # Update an existing session
 def update_session(session, access_token):
     session.access_token = access_token
-    session.expires_at = datetime.now() + timedelta(days=7)
     db.session.commit()
 
 # Delete session on logout

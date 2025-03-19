@@ -3,13 +3,13 @@ import { LOGIN, LOGOUT, SET_USER, SET_MFA } from "./constants";
 type AuthState = {
   isAuthenticated: boolean;
   user?: string | null;
-  mfa_enabled?: boolean;
+  mfa_enabled?: boolean | null;
 };
 
 const initialState: AuthState = {
   isAuthenticated: false,
   user: null,
-  mfa_enabled: false,
+  mfa_enabled: null,
 };
 
 interface AuthAction {
@@ -22,7 +22,7 @@ const authReducer = (state = initialState, action: AuthAction): AuthState => {
     case LOGIN:
       return { ...state, isAuthenticated: true };
     case LOGOUT:
-      return { ...state, isAuthenticated: false, user: null };
+      return initialState;
     case SET_USER:
       return { ...state, user: typeof action.payload === 'string' ? action.payload : state.user };
     case SET_MFA:

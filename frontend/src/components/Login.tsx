@@ -17,11 +17,12 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const validateInput = validateLoginInput(username, password);
+    const validateInput = await validateLoginInput(username, password);
     if (validateInput.success === false) {
       setErrorMessage(validateInput.message);
       return;
     }
+    setErrorMessage("");
     const loginResponse = await postLogin(username, password, dispatch);
     if (loginResponse && loginResponse.success) {
       navigate("/");
@@ -70,7 +71,7 @@ const Login: React.FC = () => {
           </p>
           <form className={styles["form"]} onSubmit={handleSubmitMFA}>
             <input
-              type="text"
+              type="number"
               placeholder="Your code"
               value={totp}
               onChange={(e) => setTotp(e.target.value)}
@@ -82,34 +83,40 @@ const Login: React.FC = () => {
               Submit
             </button>
           </form>
-          <button className={styles["submit-button"]} onClick={handleCancel}>Cancel</button>
+          <button className={styles["submit-button"]} onClick={handleCancel}>
+            Cancel
+          </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>Username:</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label>Password:</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className={styles["submit-button"]}>
-            Login
+        <>
+          <form onSubmit={handleSubmit}>
+            <div>
+              <label>Username:</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Password:</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit" className={styles["submit-button"]}>
+              Login
+            </button>
+          </form>
+          <button className={styles["submit-button"]} onClick={handleHome}>
+            Cancel
           </button>
-        </form>
+        </>
       )}
-      <button className={styles["submit-button"]} onClick={handleHome}>Cancel</button>
       <Link to="/register">Don't have an account? Register here</Link>
     </div>
   );

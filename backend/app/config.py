@@ -15,3 +15,4 @@ class Config:
     JWT_COOKIE_HTTPONLY = True
     JWT_COOKIE_SAMESITE = "Strict"
     JWT_COOKIE_CSRF_PROTECT = True
+    ENCRYPTION_KEY_MFA = os.getenv('ENCRYPTION_KEY_MFA')
