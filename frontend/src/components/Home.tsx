@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import styles from "./styles/Home.module.css";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
-import { logOut, setupMFA, verifySetupMFA } from "../api/auth";
+import { logOut, setupMFA, verifySetupMFA, disableMFA } from "../api/auth";
 import { setMFA } from "../redux/authActions";
 
 const Home: React.FC = () => {
@@ -39,9 +39,27 @@ const Home: React.FC = () => {
   const handleMFASubmit = async () => {
     const verifyMfaSuccess = await verifySetupMFA(mfaCode);
     if (verifyMfaSuccess && verifyMfaSuccess.success) {
-      console.log("MFA setup successful");
       dispatch(setMFA(true));
       setOpenMfa(false);
+      setMfaCode("");
+    }
+  };
+
+  const handleMFADisable = () => {
+    setOpenMfa(true);
+  };
+
+  const handleMFADisableSubmit = async () => {
+    const confirmDisable = window.confirm(
+      "Are you sure you want to disable MFA? You can re-enable it later."
+    );
+    if (confirmDisable) {
+      const disableMfaSuccess = await disableMFA(mfaCode);
+      if (disableMfaSuccess && disableMfaSuccess.success) {
+        dispatch(setMFA(false));
+        setOpenMfa(false);
+        setMfaCode("");
+      }
     }
   };
 
@@ -52,7 +70,34 @@ const Home: React.FC = () => {
         <>
           <p>Hello, {username}</p>
           {mfaEnabled ? (
-            <p>Multi-factor authentication is currently enabled.</p>
+            <>
+              <p>Multi-factor authentication is currently enabled.</p>
+              {!openMfa ? (
+                <button onClick={handleMFADisable} className={styles.btn}>
+                  Disable MFA
+                </button>
+              ) : (
+                <>
+                  <div>
+                    <p>Enter your MFA code to disable MFA:</p>
+                    <input
+                      type="number"
+                      value={mfaCode}
+                      onChange={(e) => setMfaCode(e.target.value)}
+                    />
+                    <button
+                      onClick={handleMFADisableSubmit}
+                      className={styles.btn}
+                    >
+                      Submit
+                    </button>
+                  </div>
+                  <button onClick={handleCloseMfa} className={styles.btn}>
+                    Cancel
+                  </button>
+                </>
+              )}
+            </>
           ) : (
             <div>
               <p>Multi Factor Authentication is not enabled</p>
@@ -65,7 +110,11 @@ const Home: React.FC = () => {
                   <div>
                     <p>Scan the QR code with your authenticator app:</p>
                     {qrcode && <img src={qrcode} alt="qrcode" />}
-                    <input type="number" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)}/>
+                    <input
+                      type="number"
+                      value={mfaCode}
+                      onChange={(e) => setMfaCode(e.target.value)}
+                    />
                     <button onClick={handleMFASubmit} className={styles.btn}>
                       Submit
                     </button>

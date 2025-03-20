@@ -1,5 +1,4 @@
-from datetime import timedelta, datetime
-from sqlalchemy import DateTime
+from datetime import timedelta, datetime, timezone
 from flask import request, jsonify, send_file
 import io
 from flask_jwt_extended import decode_token, get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
@@ -42,17 +41,17 @@ def refresh():
     if existing_session.refresh_token_jti != request_refresh_token:
         return jsonify(message="Invalid refresh token"), 401
     
-    if existing_session and existing_session.expires_at < datetime.now():
+    if existing_session and existing_session.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
         delete_session(existing_session)
-        existing_session = None
-    
+        return jsonify(message="Session expired, please log in again."), 401
+
     mfa_enabled = claims.get('mfa_enabled', False)
 
     access_token = create_access_token(identity=current_user, additional_claims={ 'mfa_enabled': mfa_enabled })
     update_session(existing_session, access_token)
 
     response = jsonify(user=current_user, mfa_enabled=mfa_enabled)
-    set_access_cookies(response, access_token)
+    set_access_cookies(response, access_token, 15*60)
     
     return response, 200
 
@@ -74,20 +73,21 @@ def login():
     user = User.query.filter_by(username=username).first()
 
     if user and user.check_password(password):
+
         if user.mfa_enabled:
             temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
             response = jsonify(message="MFA required", mfa_required=True)
-            set_access_cookies(response, temp_token)
+            set_access_cookies(response, temp_token, 5*60)
             return response, 403
-        
-        access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled }, expires_delta=timedelta(minutes=15))
-        refresh_token = create_refresh_token(identity=username, expires_delta=timedelta(days=7))
+
+        access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled })
+        refresh_token = create_refresh_token(identity=username)
 
         create_session(username, access_token, refresh_token)
         response = jsonify(user=username, mfa_enabled=user.mfa_enabled)
 
-        set_access_cookies(response, access_token)
-        set_refresh_cookies(response, refresh_token)
+        set_access_cookies(response, access_token, 15*60)
+        set_refresh_cookies(response, refresh_token, 7*24*60*60)
 
         return response, 200
 
@@ -98,7 +98,7 @@ def login():
 @jwt_required()
 def logout():
     current_user = get_jwt_identity()
-    session = UserSession.query.filter_by(username=current_user).first() 
+    session = UserSession.query.filter_by(username=current_user).order_by(UserSession.expires_at.desc()).first() # There should be only one session per user but just in case
 
     if session:
         delete_session(session)
@@ -106,6 +106,8 @@ def logout():
     response = jsonify({"message": "Logout successful"})
     response.delete_cookie('access_token_cookie')
     response.delete_cookie('refresh_token_cookie')
+    response.delete_cookie('csrf_access_token')
+    response.delete_cookie('csrf_refresh_token')
     return response, 200
 
 # Register new user
@@ -150,7 +152,7 @@ def verify_mfa():
 
     if not data or not isinstance(data, dict):
         return jsonify(message="Invalid request"), 400
-    print(current_user)
+
     if current_user != username:
         return jsonify(message="Invalid username"), 400
 
@@ -178,12 +180,12 @@ def verify_mfa():
     if not totp.verify(totp_code):
         return jsonify(message="Invalid MFA code"), 403
     
-    access_token = create_access_token(identity=username, additional_claims={"mfa_enabled": True }, expires_delta=timedelta(minutes=15))
-    refresh_token = create_refresh_token(identity=username, expires_delta=timedelta(days=7))
+    access_token = create_access_token(identity=username, additional_claims={"mfa_enabled": True })
+    refresh_token = create_refresh_token(identity=username)
     
     response = jsonify(user=username, mfa_enabled=True)
-    set_access_cookies(response, access_token)
-    set_refresh_cookies(response, refresh_token)
+    set_access_cookies(response, access_token, 15*60)
+    set_refresh_cookies(response, refresh_token, 7*24*60*60)
     return response, 200
 
 # Enable MFA with setup, generate QR code
@@ -241,8 +243,43 @@ def verify_mfa_setup():
         db.session.commit()
         
         response = jsonify(message="MFA successfully enabled")
-        access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": True }, expires_delta=timedelta(minutes=15))
-        set_access_cookies(response, access_token)
+        access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": True })
+        set_access_cookies(response, access_token, 15*60)
+
+        return response, 200
+    
+    return jsonify(message="Invalid TOTP code"), 401
+
+# Remove MFA from this user
+@app.route('/api/mfa/disable', methods=['POST'])
+@jwt_required()
+def remove_mfa():
+    username = get_jwt_identity()
+    user = User.query.filter_by(username=username).first()
+    
+    if not user:
+        return jsonify(message="User not found"), 404
+    
+    if not user.mfa_enabled or not user.mfa_secret_hash:
+        return jsonify(message="MFA setup required to remove it"), 400
+
+    data = request.json
+    totp_code = data.get("totp_code")
+
+    if not totp_code:
+        return jsonify(message="TOTP code is required"), 400
+
+    decrypted_secret = user.get_mfa_secret()
+    totp = pyotp.TOTP(decrypted_secret)
+
+    if totp.verify(totp_code):
+        user.mfa_enabled = False
+        user.mfa_secret_hash = None
+        db.session.commit()
+        
+        response = jsonify(message="MFA successfully disabled")
+        access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": False })
+        set_access_cookies(response, access_token, 15*60)
 
         return response, 200
     
@@ -255,7 +292,7 @@ def get_jti_from_token(token):
 
 # Create a new session
 def create_session(username, access_token, refresh_token=None):
-    expires_at = datetime.now() + timedelta(days=7)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     refresh_token_jti = get_jti_from_token(refresh_token)
     session = UserSession(
         username=username,

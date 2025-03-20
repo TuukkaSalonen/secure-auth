@@ -16,7 +16,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const loginCheck = async () => {
-      const loggedIn = await checkLoggedIn(dispatch) || await refreshToken(dispatch);
+      const loggedIn =
+        (await checkLoggedIn(dispatch)) || (await refreshToken(dispatch));
       if (!loggedIn) {
         dispatch(logout());
       }

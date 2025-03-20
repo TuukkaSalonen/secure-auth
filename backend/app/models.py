@@ -1,7 +1,7 @@
-from . import db
+from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
-from .keyUtils import encrypt_secret_MFA, decrypt_secret_MFA
+from datetime import datetime, timezone
+from .authUtils import encrypt_secret_MFA, decrypt_secret_MFA
 
 # User model
 class User(db.Model):
@@ -35,7 +35,7 @@ class UserSession(db.Model):
     access_token = db.Column(db.String(1024), nullable=False)
     refresh_token_jti = db.Column(db.String(36), nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now())
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     def __repr__(self):
         return f"<UserSession {self.user_id}>"
