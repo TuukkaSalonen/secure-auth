@@ -19,13 +19,16 @@ mfa_code_schema\
     .has().digits()\
     .has().no().spaces()
 
+email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+username_regex = r'^[a-zA-Z0-9_]+$'
+
 # Function to validate the input for user basic login/registration
 def check_login_input(username, password):
     if not username or not password:
-        return False, "Username and password are required"
-    
-    if not (2 <= len(username) <= 32) or not re.fullmatch(r'^[a-zA-Z0-9_]+$', username):
-        return False, "Invalid username format"
+        return False, "Username/Email and password are required"
+
+    if not (2 <= len(username) <= 32) or (not re.fullmatch(username_regex, username) and not re.fullmatch(email_regex, username)):
+        return False, "Invalid username/email format"
 
     if not password_schema.validate(password):
         return False, "Invalid password format (8-64 chars, at least one uppercase, lowercase, and digit, no spaces)"
@@ -33,15 +36,9 @@ def check_login_input(username, password):
     return True, "Valid input"
 
 # Function to validate the input for login with MFA code
-def check_mfa_input(username, code):
-    if not username:
-        return False, "Username is required"
-    
+def check_mfa_input(code):
     if not code:
         return False, "Code is required"
-    
-    if not (2 <= len(username) <= 32) or not re.fullmatch(r'^[a-zA-Z0-9_]+$', username):
-        return False, "Invalid username format"
 
     if not mfa_code_schema.validate(code):
         return False, "Invalid code format (4-6 digits)"

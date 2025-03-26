@@ -1,16 +1,19 @@
 import * as yup from "yup";
 
 const usernameRegex = /^[a-zA-Z0-9_]{3,32}$/;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d]{8,64}$/;
 
 const loginSchema = yup.object().shape({
   username: yup
     .string()
-    .matches(
-      usernameRegex,
-      "Username must be between 3 and 32 characters and can only contain letters, numbers, and underscores."
+    .test(
+      "username-or-email",
+      "Invalid email or username format. Username must be between 3 and 32 characters and can only contain letters, numbers, and underscores.",
+      (value) =>
+        usernameRegex.test(value || "") || emailRegex.test(value || "")
     )
-    .required("Username is required."),
+    .required("Username or email is required."),
   password: yup
     .string()
     .matches(
@@ -23,11 +26,13 @@ const loginSchema = yup.object().shape({
 const registerSchema = yup.object().shape({
   username: yup
     .string()
-    .matches(
-      usernameRegex,
-      "Username must be between 3 and 32 characters and can only contain letters, numbers, and underscores."
+    .test(
+      "username-or-email",
+      "Invalid email or username format. Username must be between 3 and 32 characters and can only contain letters, numbers, and underscores.",
+      (value) =>
+        usernameRegex.test(value || "") || emailRegex.test(value || "")
     )
-    .required("Username is required."),
+    .required("Username or email is required."),
   password: yup
     .string()
     .matches(

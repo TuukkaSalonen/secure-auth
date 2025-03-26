@@ -42,7 +42,7 @@ const Register: React.FC = () => {
       )}
       <form onSubmit={handleSubmit}>
         <div className={styles["form-group"]}>
-          <label>Username:</label>
+          <label>Username/Email:</label>
           <input
             type="text"
             value={username}

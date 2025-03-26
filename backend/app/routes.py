@@ -1,13 +1,14 @@
 from datetime import timedelta, datetime, timezone
-from flask import request, jsonify, send_file
+from flask import make_response, request, jsonify, send_file, redirect
 import io
-from flask_jwt_extended import decode_token, get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
+from flask_jwt_extended import get_csrf_token, decode_token, get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
 from . import db
 from . import app 
 from .models import User, UserSession
 import pyotp
 import qrcode
 from .validators import check_login_input, check_mfa_input
+from . import oauth
 
 # Check if the JWT is valid
 @app.route('/api/check', methods=['GET'])
@@ -72,8 +73,10 @@ def login():
 
     user = User.query.filter_by(username=username).first()
 
+    if user and user.sso_provider:
+        return jsonify(message=("This user has connected a " + user.sso_provider + " account. Please login with " + user.sso_provider)), 404
+    
     if user and user.check_password(password):
-
         if user.mfa_enabled:
             temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
             response = jsonify(message="MFA required", mfa_required=True)
@@ -93,6 +96,53 @@ def login():
 
     return jsonify(message="Invalid credentials"), 401
 
+# Login with Google OAuth
+@app.route('/api/login/google', methods=['GET'])
+def login_google():
+    return oauth.google.authorize_redirect(app.config['GOOGLE_REDIRECT_URI'])
+
+# Callback for Google OAuth
+@app.route('/api/login/google/callback', methods=['GET'])
+def google_callback():
+    token = oauth.google.authorize_access_token()
+    user_info = oauth.google.get("https://www.googleapis.com/oauth2/v2/userinfo").json()
+    username = user_info.get('email')
+
+    if not username:
+        return jsonify(message="Invalid email"), 400
+    
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        user = User(username=username, sso_provider="Google")
+        db.session.add(user)
+        db.session.commit()
+
+    if user.mfa_enabled:
+        temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
+        csrf_temp_token = get_csrf_token(temp_token)
+        # Need to add cookies manually for redirect response
+        redirect_response = make_response(redirect(f"{app.config['FRONTEND_URL']}/login?mfa_required=true"))
+        redirect_response.set_cookie('access_token_cookie', temp_token, max_age=5*60, secure=True, httponly=True, samesite='Strict')
+        redirect_response.set_cookie('csrf_access_token', csrf_temp_token, max_age=5*60, secure=True, httponly=False, samesite='Strict')
+        
+        return redirect_response, 302
+
+    access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled })
+    refresh_token = create_refresh_token(identity=username)
+    csrf_access_token = get_csrf_token(access_token)
+    csrf_refresh_token = get_csrf_token(refresh_token)
+
+    create_session(username, access_token, refresh_token)
+
+    # Need to add cookies manually for redirect response
+    redirect_response = make_response(redirect(app.config['FRONTEND_URL']))
+    redirect_response.set_cookie('access_token_cookie', access_token, max_age=15*60, secure=True, httponly=True, samesite='Strict')
+    redirect_response.set_cookie('refresh_token_cookie', refresh_token, max_age=7*24*60*60, secure=True, httponly=True, samesite='Strict')
+    redirect_response.set_cookie('csrf_access_token', csrf_access_token, max_age=15*60, secure=True, httponly=False, samesite='Strict')
+    redirect_response.set_cookie('csrf_refresh_token', csrf_refresh_token, max_age=7*24*60*60, secure=True, httponly=False, samesite='Strict')
+
+    return redirect_response, 302
+
 # Logout, clear session and cookies
 @app.route('/api/logout', methods=['POST'])
 @jwt_required()
@@ -108,6 +158,7 @@ def logout():
     response.delete_cookie('refresh_token_cookie')
     response.delete_cookie('csrf_access_token')
     response.delete_cookie('csrf_refresh_token')
+    response.delete_cookie('session') # SSO Auth session cookie
     return response, 200
 
 # Register new user
@@ -126,15 +177,13 @@ def register():
         return jsonify(message=message), 400
 
     if User.query.filter_by(username=username).first():
-        return jsonify(message="Username already exists"), 400
+        return jsonify(message="Account with username/email already exists"), 400
 
     new_user = User(username=username, password=password)
-
     db.session.add(new_user)
     db.session.commit()
 
     return jsonify(message="User registered successfully"), 201
-
 
 # Verify MFA with TOTP code
 @app.route('/api/login/verify', methods=['POST'])
@@ -142,31 +191,24 @@ def register():
 def verify_mfa():
     current_user = get_jwt_identity()
     temp_token = get_jwt().get('temporary_token', False)
-    
+
     if not temp_token:
         return jsonify(message="MFA required"), 403
 
     data = request.json
-    username = data.get("username", "").strip()
     totp_code = data.get("totp_code")
 
     if not data or not isinstance(data, dict):
         return jsonify(message="Invalid request"), 400
 
-    if current_user != username:
-        return jsonify(message="Invalid username"), 400
+    if not current_user:
+        return jsonify(message="Invalid user"), 400
 
-    is_valid, message = check_mfa_input(username, totp_code)
+    is_valid, message = check_mfa_input(totp_code)
     if not is_valid:
         return jsonify(message=message), 400
     
-    if not temp_token:
-        return jsonify(message="Temp token is required"), 400
-    
-    if current_user != username:
-        return jsonify(message="Invalid username"), 400
-    
-    user = User.query.filter_by(username=username).first()
+    user = User.query.filter_by(username=current_user).first()
 
     if not user:
         return jsonify(message="User not found"), 404
@@ -180,12 +222,13 @@ def verify_mfa():
     if not totp.verify(totp_code):
         return jsonify(message="Invalid MFA code"), 403
     
-    access_token = create_access_token(identity=username, additional_claims={"mfa_enabled": True })
-    refresh_token = create_refresh_token(identity=username)
+    access_token = create_access_token(identity=current_user, additional_claims={"mfa_enabled": True })
+    refresh_token = create_refresh_token(identity=current_user)
     
-    response = jsonify(user=username, mfa_enabled=True)
+    response = jsonify(user=current_user, mfa_enabled=True)
     set_access_cookies(response, access_token, 15*60)
     set_refresh_cookies(response, refresh_token, 7*24*60*60)
+
     return response, 200
 
 # Enable MFA with setup, generate QR code
@@ -203,7 +246,6 @@ def generate_mfa_qr():
 
     totp = pyotp.TOTP(pyotp.random_base32())
     user.set_mfa_secret(totp.secret)
-
     db.session.commit()
 
     issuer = "Secure Programming Application"

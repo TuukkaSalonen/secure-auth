@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./styles/Login.module.css";
 import { useNavigate } from "react-router-dom";
 import { postLogin, verifyLoginMFA } from "../api/auth";
 import { useDispatch } from "react-redux";
 import { validateLoginInput } from "../validators";
+import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -14,6 +16,14 @@ const Login: React.FC = () => {
   const [mfaRequired, setMfaRequired] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.has("mfa_required")) {
+      setMfaRequired(true);
+      navigate(window.location.pathname, { replace: true });
+    }
+  }, [navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -37,7 +47,7 @@ const Login: React.FC = () => {
 
   const handleSubmitMFA = async (event: React.FormEvent) => {
     event.preventDefault();
-    const loginResponse = await verifyLoginMFA(username, totp, dispatch);
+    const loginResponse = await verifyLoginMFA(totp, dispatch);
     if (loginResponse && loginResponse.success) {
       navigate("/");
     } else {
@@ -55,6 +65,10 @@ const Login: React.FC = () => {
 
   const handleHome = async () => {
     navigate("/");
+  };
+
+  const handleSSOLogin = async (provider: string) => {
+    window.location.href = `http://localhost:5000/api/login/${provider}`;
   };
 
   return (
@@ -91,7 +105,7 @@ const Login: React.FC = () => {
         <>
           <form onSubmit={handleSubmit}>
             <div>
-              <label>Username:</label>
+              <label>Username/Email:</label>
               <input
                 type="text"
                 value={username}
@@ -115,6 +129,21 @@ const Login: React.FC = () => {
           <button className={styles["submit-button"]} onClick={handleHome}>
             Cancel
           </button>
+          <p>Or login with:</p>
+          <div className={styles["sso-container"]}>
+            <button
+              className={styles["sso-button"]}
+              onClick={() => handleSSOLogin("google")}
+            >
+              <FontAwesomeIcon icon={faGoogle} className={styles["icon"]} />
+            </button>
+            <button
+              className={styles["sso-button"]}
+              onClick={() => handleSSOLogin("github")}
+            >
+              <FontAwesomeIcon icon={faGithub} className={styles["icon"]} />
+            </button>
+          </div>
         </>
       )}
       <Link to="/register">Don't have an account? Register here</Link>

@@ -5,6 +5,7 @@ from datetime import timedelta
 load_dotenv()
 
 class Config:
+    FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
     SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-jwt-secret-key')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
@@ -20,7 +21,10 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=7)
     JWT_SESSION_COOKIE = False
     ENCRYPTION_KEY_MFA = os.getenv('ENCRYPTION_KEY_MFA')
-    SESSON_COOKIE_NAME = None
+    GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+    GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI')
+
 
 # Content Security Policy
 csp = {

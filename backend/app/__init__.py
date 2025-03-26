@@ -8,6 +8,7 @@ from flask_talisman import Talisman
 from .config import csp
 from .db import db
 from . import session_cleanup
+from authlib.integrations.flask_client import OAuth
 
 # Initialize the app
 app = Flask(__name__)
@@ -21,6 +22,22 @@ migrate = Migrate(app, db)
 # Initialize JWTManager
 jwt = JWTManager(app)
 
+# Initialize OAuth
+oauth = OAuth(app)
+
+oauth.register(
+    "google",
+    client_id=app.config['GOOGLE_CLIENT_ID'],
+    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+    authorize_url="https://accounts.google.com/o/oauth2/auth",
+    authorize_params=None,
+    access_token_url="https://oauth2.googleapis.com/token",
+    access_token_params=None,
+    client_kwargs={"scope": "openid email profile"},
+    api_base_url="https://www.googleapis.com/",
+    jwks_uri="https://www.googleapis.com/oauth2/v3/certs",
+)
+
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 
 # Initialize Talisman
@@ -32,4 +49,3 @@ login_manager = LoginManager(app)
 session_cleanup.scheduler.start()
 
 from . import routes, models
-

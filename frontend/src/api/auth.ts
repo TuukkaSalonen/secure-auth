@@ -141,7 +141,6 @@ export const postLogin = async (
 
 // API call to verify MFA during login
 export const verifyLoginMFA = async (
-  username: string,
   totpCode: string,
   dispatch: AppDispatch
 ) => {
@@ -154,7 +153,7 @@ export const verifyLoginMFA = async (
         ...(csrfToken && { "X-CSRF-Token": csrfToken }),
       },
       credentials: "include",
-      body: JSON.stringify({ username, totp_code: totpCode }),
+      body: JSON.stringify({ totp_code: totpCode }),
     });
     const data = await response.json();
     if (response.ok) {
