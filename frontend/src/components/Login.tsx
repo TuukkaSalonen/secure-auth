@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./styles/Login.module.css";
 import { useNavigate } from "react-router-dom";
-import { postLogin, verifyLoginMFA } from "../api/auth";
+import { postLogin, verifyLoginMFA, ProviderLogin } from "../api/auth";
 import { useDispatch } from "react-redux";
 import { validateLoginInput } from "../validators";
 import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
@@ -67,8 +67,8 @@ const Login: React.FC = () => {
     navigate("/");
   };
 
-  const handleSSOLogin = async (provider: string) => {
-    window.location.href = `http://localhost:5000/api/login/${provider}`;
+  const handleProviderLogin = async (provider: string) => {
+    ProviderLogin(provider);
   };
 
   return (
@@ -133,13 +133,13 @@ const Login: React.FC = () => {
           <div className={styles["sso-container"]}>
             <button
               className={styles["sso-button"]}
-              onClick={() => handleSSOLogin("google")}
+              onClick={() => handleProviderLogin("google")}
             >
               <FontAwesomeIcon icon={faGoogle} className={styles["icon"]} />
             </button>
             <button
               className={styles["sso-button"]}
-              onClick={() => handleSSOLogin("github")}
+              onClick={() => handleProviderLogin("github")}
             >
               <FontAwesomeIcon icon={faGithub} className={styles["icon"]} />
             </button>

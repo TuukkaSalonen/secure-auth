@@ -240,3 +240,7 @@ export const disableMFA = async (code: string) => {
     return { success: false, message: "MFA disable failed" };
   }
 };
+
+export const ProviderLogin = async (provider: string) => {
+  window.location.href = `http://localhost:5000/api/login/${provider}`;
+}

@@ -26,7 +26,7 @@ jwt = JWTManager(app)
 oauth = OAuth(app)
 
 oauth.register(
-    "google",
+    name="google",
     client_id=app.config['GOOGLE_CLIENT_ID'],
     client_secret=app.config['GOOGLE_CLIENT_SECRET'],
     authorize_url="https://accounts.google.com/o/oauth2/auth",
@@ -36,6 +36,17 @@ oauth.register(
     client_kwargs={"scope": "openid email profile"},
     api_base_url="https://www.googleapis.com/",
     jwks_uri="https://www.googleapis.com/oauth2/v3/certs",
+)
+
+oauth.register(
+    name="github",
+    client_id=app.config["GITHUB_CLIENT_ID"],
+    client_secret=app.config["GITHUB_CLIENT_SECRET"],
+    authorize_url="https://github.com/login/oauth/authorize",
+    authorize_params={"scope": "user:email"},
+    access_token_url="https://github.com/login/oauth/access_token",
+    api_base_url="https://api.github.com/",
+    client_kwargs={"scope": "user:email"},
 )
 
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)

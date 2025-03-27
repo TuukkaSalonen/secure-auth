@@ -20,7 +20,7 @@ def check_token():
     if not current_user:
         return jsonify(message="Invalid user"), 401
     
-    if claims.get('temporary_token', False):
+    if claims.get('temporary_token', False): # Temporary token for MFA
         return jsonify(message="MFA required"), 403
     
     mfa_enabled = claims.get('mfa_enabled', False)
@@ -32,13 +32,12 @@ def check_token():
 def refresh():
     current_user = get_jwt_identity()
     claims = get_jwt()
+
     existing_session = UserSession.query.filter_by(username=current_user).first()
-    
     if not existing_session:
         return jsonify(message="Session expired, please log in again."), 401
     
     request_refresh_token = get_jwt()["jti"]
-
     if existing_session.refresh_token_jti != request_refresh_token:
         return jsonify(message="Invalid refresh token"), 401
     
@@ -60,7 +59,6 @@ def refresh():
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
-
     if not data or not isinstance(data, dict):
         return jsonify(message="Invalid request"), 400
 
@@ -105,15 +103,66 @@ def login_google():
 @app.route('/api/login/google/callback', methods=['GET'])
 def google_callback():
     token = oauth.google.authorize_access_token()
+    if not token:
+        return jsonify(message="Invalid token"), 400
+    
     user_info = oauth.google.get("https://www.googleapis.com/oauth2/v2/userinfo").json()
     username = user_info.get('email')
-
     if not username:
         return jsonify(message="Invalid email"), 400
     
     user = User.query.filter_by(username=username).first()
-    if not user:
+    if not user: # Create new user if not found
         user = User(username=username, sso_provider="Google")
+        db.session.add(user)
+        db.session.commit()
+
+    if user.mfa_enabled:
+        temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
+        csrf_temp_token = get_csrf_token(temp_token)
+        # Need to add cookies manually for redirect response
+        redirect_response = make_response(redirect(f"{app.config['FRONTEND_URL']}/login?mfa_required=true"))
+        redirect_response.set_cookie('access_token_cookie', temp_token, max_age=5*60, secure=True, httponly=True, samesite='Strict')
+        redirect_response.set_cookie('csrf_access_token', csrf_temp_token, max_age=5*60, secure=True, httponly=False, samesite='Strict')
+        
+        return redirect_response, 302
+
+    access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled })
+    refresh_token = create_refresh_token(identity=username)
+    csrf_access_token = get_csrf_token(access_token)
+    csrf_refresh_token = get_csrf_token(refresh_token)
+
+    create_session(username, access_token, refresh_token)
+
+    # Need to add cookies manually for redirect response
+    redirect_response = make_response(redirect(app.config['FRONTEND_URL']))
+    redirect_response.set_cookie('access_token_cookie', access_token, max_age=15*60, secure=True, httponly=True, samesite='Strict')
+    redirect_response.set_cookie('refresh_token_cookie', refresh_token, max_age=7*24*60*60, secure=True, httponly=True, samesite='Strict')
+    redirect_response.set_cookie('csrf_access_token', csrf_access_token, max_age=15*60, secure=True, httponly=False, samesite='Strict')
+    redirect_response.set_cookie('csrf_refresh_token', csrf_refresh_token, max_age=7*24*60*60, secure=True, httponly=False, samesite='Strict')
+
+    return redirect_response, 302
+
+# Login with GitHub OAuth
+@app.route('/api/login/github', methods=['GET'])
+def login_github():
+    return oauth.github.authorize_redirect(redirect_uri=app.config['GITHUB_REDIRECT_URI'], prompt="select_account")
+
+# Callback for GitHub OAuth
+@app.route('/api/login/github/callback', methods=['GET'])
+def github_callback():
+    token = oauth.github.authorize_access_token()
+    if not token:
+        return jsonify(message="Invalid token"), 400
+    
+    user_info = oauth.github.get("user").json()
+    username = user_info.get('login')
+    if not username:
+        return jsonify(message="Invalid username"), 400
+    
+    user = User.query.filter_by(username=username).first()
+    if not user: # Create new user if not found
+        user = User(username=username, sso_provider="GitHub")
         db.session.add(user)
         db.session.commit()
 
@@ -149,23 +198,22 @@ def google_callback():
 def logout():
     current_user = get_jwt_identity()
     session = UserSession.query.filter_by(username=current_user).order_by(UserSession.expires_at.desc()).first() # There should be only one session per user but just in case
-
     if session:
         delete_session(session)
-    
+
     response = jsonify({"message": "Logout successful"})
     response.delete_cookie('access_token_cookie')
     response.delete_cookie('refresh_token_cookie')
     response.delete_cookie('csrf_access_token')
     response.delete_cookie('csrf_refresh_token')
-    response.delete_cookie('session') # SSO Auth session cookie
+    response.delete_cookie('session')
+
     return response, 200
 
 # Register new user
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
-
     if not data or not isinstance(data, dict):
         return jsonify(message="Invalid request"), 400
 
@@ -191,30 +239,27 @@ def register():
 def verify_mfa():
     current_user = get_jwt_identity()
     temp_token = get_jwt().get('temporary_token', False)
-
     if not temp_token:
         return jsonify(message="MFA required"), 403
 
     data = request.json
-    totp_code = data.get("totp_code")
-
     if not data or not isinstance(data, dict):
         return jsonify(message="Invalid request"), 400
-
-    if not current_user:
-        return jsonify(message="Invalid user"), 400
-
+    
+    totp_code = data.get("totp_code")
     is_valid, message = check_mfa_input(totp_code)
     if not is_valid:
         return jsonify(message=message), 400
     
-    user = User.query.filter_by(username=current_user).first()
+    if not current_user:
+        return jsonify(message="Invalid user"), 401
 
+    user = User.query.filter_by(username=current_user).first()
     if not user:
         return jsonify(message="User not found"), 404
     
     if not user.mfa_enabled or not user.mfa_secret_hash:
-        return jsonify(message="MFA setup required"), 400
+        return jsonify(message="MFA not enabled"), 400
     
     decrypted_secret = user.get_mfa_secret()
     totp = pyotp.TOTP(decrypted_secret)
@@ -237,7 +282,6 @@ def verify_mfa():
 def generate_mfa_qr():
     username = get_jwt_identity()
     user = User.query.filter_by(username=username).first()
-
     if not user:
         return jsonify(message="User not found"), 404
 
@@ -264,7 +308,6 @@ def generate_mfa_qr():
 def verify_mfa_setup():
     username = get_jwt_identity()
     user = User.query.filter_by(username=username).first()
-    
     if not user:
         return jsonify(message="User not found"), 404
     
@@ -273,7 +316,6 @@ def verify_mfa_setup():
 
     data = request.json
     totp_code = data.get("totp_code")
-
     if not totp_code:
         return jsonify(message="TOTP code is required"), 400
 
@@ -298,7 +340,6 @@ def verify_mfa_setup():
 def remove_mfa():
     username = get_jwt_identity()
     user = User.query.filter_by(username=username).first()
-    
     if not user:
         return jsonify(message="User not found"), 404
     
@@ -307,7 +348,6 @@ def remove_mfa():
 
     data = request.json
     totp_code = data.get("totp_code")
-
     if not totp_code:
         return jsonify(message="TOTP code is required"), 400
 
