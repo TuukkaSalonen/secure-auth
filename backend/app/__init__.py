@@ -2,6 +2,8 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from .config import Config
 from flask_cors import CORS
 from flask_talisman import Talisman
@@ -25,6 +27,7 @@ jwt = JWTManager(app)
 # Initialize OAuth
 oauth = OAuth(app)
 
+# Register OAuth providers
 oauth.register(
     name="google",
     client_id=app.config['GOOGLE_CLIENT_ID'],
@@ -49,13 +52,22 @@ oauth.register(
     client_kwargs={"scope": "user:email"},
 )
 
+# Setup CORS
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
+
 
 # Initialize Talisman
 Talisman(app, content_security_policy=csp, frame_options='DENY') 
 
 # Initialize LoginManager
 login_manager = LoginManager(app)
+
+# Initialize rate limiter
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["500 per day", "60 per hour"],
+)
 
 session_cleanup.scheduler.start()
 

@@ -1,5 +1,6 @@
 import { login, logout, setUser, setMFA } from "../redux/authActions";
 import { AppDispatch } from "../redux/store";
+import { fetchWrapper } from "./fetchWrapper";
 
 // Get CSRF refresh token from cookie
 export const getCSRFRefreshToken = async () => {
@@ -20,14 +21,14 @@ export const getCSRFAccessToken = async () => {
 // API call to check if user is logged in
 export const checkLoggedIn = async (dispatch: AppDispatch) => {
   try {
-    const response = await fetch("http://localhost:5000/api/check", {
+    const response = await fetchWrapper("http://localhost:5000/api/check", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
       credentials: "include",
     });
-
+    console.log("Response from checkLoggedIn:", response);
     if (response.ok) {
       const data = await response.json();
       dispatch(login(data.access_token));
@@ -46,7 +47,7 @@ export const checkLoggedIn = async (dispatch: AppDispatch) => {
 export const refreshToken = async (dispatch: AppDispatch) => {
   try {
     const csrfToken = await getCSRFRefreshToken();
-    const response = await fetch("http://localhost:5000/api/refresh", {
+    const response = await fetchWrapper("http://localhost:5000/api/refresh", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -72,7 +73,7 @@ export const refreshToken = async (dispatch: AppDispatch) => {
 export const logOut = async (dispatch: AppDispatch) => {
   try {
     const csrfToken = await getCSRFAccessToken();
-    await fetch("http://localhost:5000/api/logout", {
+    await fetchWrapper("http://localhost:5000/api/logout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -90,7 +91,7 @@ export const logOut = async (dispatch: AppDispatch) => {
 // API call to register new user
 export const postRegister = async (username: string, password: string) => {
   try {
-    const response = await fetch("http://localhost:5000/api/register", {
+    const response = await fetchWrapper("http://localhost:5000/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -115,7 +116,7 @@ export const postLogin = async (
   dispatch: AppDispatch
 ) => {
   try {
-    const response = await fetch("http://localhost:5000/api/login", {
+    const response = await fetchWrapper("http://localhost:5000/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -146,15 +147,18 @@ export const verifyLoginMFA = async (
 ) => {
   try {
     const csrfToken = await getCSRFAccessToken();
-    const response = await fetch("http://localhost:5000/api/login/verify", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfToken && { "X-CSRF-Token": csrfToken }),
-      },
-      credentials: "include",
-      body: JSON.stringify({ totp_code: totpCode }),
-    });
+    const response = await fetchWrapper(
+      "http://localhost:5000/api/login/verify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+        },
+        credentials: "include",
+        body: JSON.stringify({ totp_code: totpCode }),
+      }
+    );
     const data = await response.json();
     if (response.ok) {
       dispatch(login(data.access_token));
@@ -173,7 +177,7 @@ export const verifyLoginMFA = async (
 export const setupMFA = async () => {
   try {
     const csrfToken = await getCSRFAccessToken();
-    const response = await fetch("http://localhost:5000/api/mfa/setup", {
+    const response = await fetchWrapper("http://localhost:5000/api/mfa/setup", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -197,15 +201,18 @@ export const setupMFA = async () => {
 export const verifySetupMFA = async (code: string) => {
   try {
     const csrfToken = await getCSRFAccessToken();
-    const response = await fetch("http://localhost:5000/api/mfa/setup/verify", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfToken && { "X-CSRF-Token": csrfToken }),
-      },
-      credentials: "include",
-      body: JSON.stringify({ totp_code: code }),
-    });
+    const response = await fetchWrapper(
+      "http://localhost:5000/api/mfa/setup/verify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+        },
+        credentials: "include",
+        body: JSON.stringify({ totp_code: code }),
+      }
+    );
     const data = await response.json();
     if (response.ok) {
       return { success: true, message: data.message };
@@ -221,15 +228,18 @@ export const verifySetupMFA = async (code: string) => {
 export const disableMFA = async (code: string) => {
   try {
     const csrfToken = await getCSRFAccessToken();
-    const response = await fetch("http://localhost:5000/api/mfa/disable", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfToken && { "X-CSRF-Token": csrfToken }),
-      },
-      credentials: "include",
-      body: JSON.stringify({ totp_code: code })
-    });
+    const response = await fetchWrapper(
+      "http://localhost:5000/api/mfa/disable",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+        },
+        credentials: "include",
+        body: JSON.stringify({ totp_code: code }),
+      }
+    );
     const data = await response.json();
     if (response.ok) {
       return { success: true, message: data.message };
@@ -243,4 +253,4 @@ export const disableMFA = async (code: string) => {
 
 export const ProviderLogin = async (provider: string) => {
   window.location.href = `http://localhost:5000/api/login/${provider}`;
-}
+};

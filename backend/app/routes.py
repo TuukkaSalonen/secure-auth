@@ -9,9 +9,11 @@ import pyotp
 import qrcode
 from .validators import check_login_input, check_mfa_input
 from . import oauth
+from . import limiter
 
 # Check if the JWT is valid
 @app.route('/api/check', methods=['GET'])
+@limiter.limit("15 per minute")
 @jwt_required()
 def check_token():
     current_user = get_jwt_identity()
@@ -28,6 +30,7 @@ def check_token():
 
 # Refresh access token with refresh token
 @app.route('/api/refresh', methods=['POST'])
+@limiter.limit("15 per minute")
 @jwt_required(refresh=True)
 def refresh():
     current_user = get_jwt_identity()
@@ -57,6 +60,7 @@ def refresh():
 
 # Login with username and password
 @app.route('/api/login', methods=['POST'])
+@limiter.limit("10 per minute")
 def login():
     data = request.json
     if not data or not isinstance(data, dict):
@@ -96,6 +100,7 @@ def login():
 
 # Login with Google OAuth
 @app.route('/api/login/google', methods=['GET'])
+@limiter.limit("10 per minute")
 def login_google():
     return oauth.google.authorize_redirect(app.config['GOOGLE_REDIRECT_URI'])
 
@@ -145,6 +150,7 @@ def google_callback():
 
 # Login with GitHub OAuth
 @app.route('/api/login/github', methods=['GET'])
+@limiter.limit("10 per minute")
 def login_github():
     return oauth.github.authorize_redirect(redirect_uri=app.config['GITHUB_REDIRECT_URI'], prompt="select_account")
 
@@ -212,6 +218,7 @@ def logout():
 
 # Register new user
 @app.route('/api/register', methods=['POST'])
+@limiter.limit("5 per minute")
 def register():
     data = request.json
     if not data or not isinstance(data, dict):
@@ -235,6 +242,7 @@ def register():
 
 # Verify MFA with TOTP code
 @app.route('/api/login/verify', methods=['POST'])
+@limiter.limit("10 per minute")
 @jwt_required()
 def verify_mfa():
     current_user = get_jwt_identity()
@@ -278,6 +286,7 @@ def verify_mfa():
 
 # Enable MFA with setup, generate QR code
 @app.route('/api/mfa/setup', methods=['GET'])
+@limiter.limit("5 per minute")
 @jwt_required()
 def generate_mfa_qr():
     username = get_jwt_identity()
@@ -304,6 +313,7 @@ def generate_mfa_qr():
 
 # Verify MFA setup with TOTP code
 @app.route('/api/mfa/setup/verify', methods=['POST'])
+@limiter.limit("5 per minute")
 @jwt_required()
 def verify_mfa_setup():
     username = get_jwt_identity()
@@ -336,6 +346,7 @@ def verify_mfa_setup():
 
 # Remove MFA from this user
 @app.route('/api/mfa/disable', methods=['POST'])
+@limiter.limit("5 per hour")
 @jwt_required()
 def remove_mfa():
     username = get_jwt_identity()
