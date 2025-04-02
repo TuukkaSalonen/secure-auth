@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_jwt_extended import JWTManager
-from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -58,9 +57,6 @@ CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}}, supports_
 
 # Initialize Talisman
 Talisman(app, content_security_policy=csp, frame_options='DENY') 
-
-# Initialize LoginManager
-login_manager = LoginManager(app)
 
 # Initialize rate limiter
 limiter = Limiter(

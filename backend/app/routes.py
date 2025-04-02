@@ -1,8 +1,7 @@
 from datetime import timedelta, datetime, timezone
-from flask import make_response, request, jsonify, send_file, redirect
+from flask import make_response, jsonify, send_file, redirect, request
 import io
 from flask_jwt_extended import get_csrf_token, decode_token, get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
-from sqlalchemy import desc
 from . import db
 from . import app 
 from .models import User, UserSession
