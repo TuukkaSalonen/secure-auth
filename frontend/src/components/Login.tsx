@@ -52,6 +52,7 @@ const Login: React.FC = () => {
       navigate("/");
     } else {
       setErrorMessage(loginResponse.message);
+      setMfaRequired(false)
     }
   };
 
@@ -104,7 +105,7 @@ const Login: React.FC = () => {
       ) : (
         <>
           <form onSubmit={handleSubmit}>
-            <div>
+            <div className={styles["form-group"]}>
               <label>Username/Email:</label>
               <input
                 type="text"
@@ -113,7 +114,7 @@ const Login: React.FC = () => {
                 required
               />
             </div>
-            <div>
+            <div className={styles["form-group"]}>
               <label>Password:</label>
               <input
                 type="password"

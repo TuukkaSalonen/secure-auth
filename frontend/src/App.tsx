@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const auth = useSelector((state: RootState) => state.auth);
 
+  // Check if user is logged in on mount
   useEffect(() => {
     const loginCheck = async () => {
       const loggedIn =
@@ -23,7 +24,24 @@ const App: React.FC = () => {
       }
     };
     loginCheck();
-  }, [dispatch]);
+  }
+  , [dispatch]);
+
+  // If user is logged in, set up interval to refresh token
+  useEffect(() => {
+    if (!auth.isAuthenticated) return;
+      const refreshInterval = setInterval(async () => {
+        const loggedIn = await refreshToken(dispatch);
+        if (!loggedIn) {
+          clearInterval(refreshInterval);
+          dispatch(logout());
+        }
+      }, 14 * 60 * 1000); // 14 minutes
+
+      return () => {
+        clearInterval(refreshInterval);
+      };
+    }, [dispatch, auth.isAuthenticated]);
 
   return (
     <Router>

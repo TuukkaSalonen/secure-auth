@@ -28,7 +28,6 @@ export const checkLoggedIn = async (dispatch: AppDispatch) => {
       },
       credentials: "include",
     });
-    console.log("Response from checkLoggedIn:", response);
     if (response.ok) {
       const data = await response.json();
       dispatch(login(data.access_token));
@@ -166,6 +165,9 @@ export const verifyLoginMFA = async (
       dispatch(setMFA(data.mfa_enabled));
       return { success: true, message: "MFA Verified" };
     }
+    else if (response.status === 401) {
+      return { success: false, message: "Authentication process expired. Please login again." };
+    }
     return { success: false, message: data.message };
   } catch (error) {
     console.error("MFA verification failed:", error);
@@ -251,6 +253,7 @@ export const disableMFA = async (code: string) => {
   }
 };
 
+// Google and GitHub login redirect
 export const ProviderLogin = async (provider: string) => {
   window.location.href = `http://localhost:5000/api/login/${provider}`;
 };

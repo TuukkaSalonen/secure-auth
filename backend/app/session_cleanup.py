@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from .models import UserSession
 from app import db
 
+# Automatically clear expired sessions every 5 minutes
 def clear_expired():
     from . import app
     with app.app_context():

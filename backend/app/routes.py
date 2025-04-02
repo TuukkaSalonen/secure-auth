@@ -2,6 +2,7 @@ from datetime import timedelta, datetime, timezone
 from flask import make_response, request, jsonify, send_file, redirect
 import io
 from flask_jwt_extended import get_csrf_token, decode_token, get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
+from sqlalchemy import desc
 from . import db
 from . import app 
 from .models import User, UserSession
@@ -35,7 +36,11 @@ def check_token():
 def refresh():
     current_user = get_jwt_identity()
     claims = get_jwt()
-
+    
+    if not current_user:
+        return jsonify(message="Invalid user"), 401
+    
+    # Check the session for the user
     existing_session = UserSession.query.filter_by(username=current_user).first()
     if not existing_session:
         return jsonify(message="Session expired, please log in again."), 401
@@ -75,10 +80,7 @@ def login():
 
     user = User.query.filter_by(username=username).first()
 
-    if user and user.sso_provider:
-        return jsonify(message=("This user has connected a " + user.sso_provider + " account. Please login with " + user.sso_provider)), 404
-    
-    if user and user.check_password(password):
+    if user and user.password_hash and user.check_password(password):
         if user.mfa_enabled:
             temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
             response = jsonify(message="MFA required", mfa_required=True)
@@ -96,7 +98,7 @@ def login():
 
         return response, 200
 
-    return jsonify(message="Invalid credentials"), 401
+    return jsonify(message="Invalid credentials. If you signed up with Google/GitHub, try logging in with them."), 401
 
 # Login with Google OAuth
 @app.route('/api/login/google', methods=['GET'])
@@ -124,27 +126,20 @@ def google_callback():
 
     if user.mfa_enabled:
         temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
-        csrf_temp_token = get_csrf_token(temp_token)
         # Need to add cookies manually for redirect response
         redirect_response = make_response(redirect(f"{app.config['FRONTEND_URL']}/login?mfa_required=true"))
-        redirect_response.set_cookie('access_token_cookie', temp_token, max_age=5*60, secure=True, httponly=True, samesite='Strict')
-        redirect_response.set_cookie('csrf_access_token', csrf_temp_token, max_age=5*60, secure=True, httponly=False, samesite='Strict')
+        set_temp_redirect_cookies(redirect_response, temp_token)
         
         return redirect_response, 302
 
     access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled })
     refresh_token = create_refresh_token(identity=username)
-    csrf_access_token = get_csrf_token(access_token)
-    csrf_refresh_token = get_csrf_token(refresh_token)
 
     create_session(username, access_token, refresh_token)
 
     # Need to add cookies manually for redirect response
     redirect_response = make_response(redirect(app.config['FRONTEND_URL']))
-    redirect_response.set_cookie('access_token_cookie', access_token, max_age=15*60, secure=True, httponly=True, samesite='Strict')
-    redirect_response.set_cookie('refresh_token_cookie', refresh_token, max_age=7*24*60*60, secure=True, httponly=True, samesite='Strict')
-    redirect_response.set_cookie('csrf_access_token', csrf_access_token, max_age=15*60, secure=True, httponly=False, samesite='Strict')
-    redirect_response.set_cookie('csrf_refresh_token', csrf_refresh_token, max_age=7*24*60*60, secure=True, httponly=False, samesite='Strict')
+    set_redirect_cookies(redirect_response, access_token, refresh_token)
 
     return redirect_response, 302
 
@@ -174,38 +169,31 @@ def github_callback():
 
     if user.mfa_enabled:
         temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
-        csrf_temp_token = get_csrf_token(temp_token)
         # Need to add cookies manually for redirect response
         redirect_response = make_response(redirect(f"{app.config['FRONTEND_URL']}/login?mfa_required=true"))
-        redirect_response.set_cookie('access_token_cookie', temp_token, max_age=5*60, secure=True, httponly=True, samesite='Strict')
-        redirect_response.set_cookie('csrf_access_token', csrf_temp_token, max_age=5*60, secure=True, httponly=False, samesite='Strict')
-        
+        set_temp_redirect_cookies(redirect_response, temp_token)
+
         return redirect_response, 302
 
     access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled })
     refresh_token = create_refresh_token(identity=username)
-    csrf_access_token = get_csrf_token(access_token)
-    csrf_refresh_token = get_csrf_token(refresh_token)
 
     create_session(username, access_token, refresh_token)
 
     # Need to add cookies manually for redirect response
     redirect_response = make_response(redirect(app.config['FRONTEND_URL']))
-    redirect_response.set_cookie('access_token_cookie', access_token, max_age=15*60, secure=True, httponly=True, samesite='Strict')
-    redirect_response.set_cookie('refresh_token_cookie', refresh_token, max_age=7*24*60*60, secure=True, httponly=True, samesite='Strict')
-    redirect_response.set_cookie('csrf_access_token', csrf_access_token, max_age=15*60, secure=True, httponly=False, samesite='Strict')
-    redirect_response.set_cookie('csrf_refresh_token', csrf_refresh_token, max_age=7*24*60*60, secure=True, httponly=False, samesite='Strict')
+    set_redirect_cookies(redirect_response, access_token, refresh_token)
 
     return redirect_response, 302
 
-# Logout, clear session and cookies
+# Logout, clear session and cookies. Allows for optional JWT to delete cookeis if they are not correct
 @app.route('/api/logout', methods=['POST'])
-@jwt_required()
+@jwt_required(optional=True)
 def logout():
     current_user = get_jwt_identity()
-    session = UserSession.query.filter_by(username=current_user).order_by(UserSession.expires_at.desc()).first() # There should be only one session per user but just in case
-    if session:
-        delete_session(session)
+    if current_user:
+        # Delete all sessions for the user
+        delete_existing_sessions(current_user)
 
     response = jsonify({"message": "Logout successful"})
     response.delete_cookie('access_token_cookie')
@@ -232,7 +220,7 @@ def register():
         return jsonify(message=message), 400
 
     if User.query.filter_by(username=username).first():
-        return jsonify(message="Account with username/email already exists"), 400
+        return jsonify(message="Username/email already in use"), 400
 
     new_user = User(username=username, password=password)
     db.session.add(new_user)
@@ -260,7 +248,7 @@ def verify_mfa():
         return jsonify(message=message), 400
     
     if not current_user:
-        return jsonify(message="Invalid user"), 401
+        return jsonify(message="Invalid user"), 403
 
     user = User.query.filter_by(username=current_user).first()
     if not user:
@@ -385,6 +373,8 @@ def get_jti_from_token(token):
 
 # Create a new session
 def create_session(username, access_token, refresh_token=None):
+    delete_existing_sessions(username) # Delete previous sessions
+
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     refresh_token_jti = get_jti_from_token(refresh_token)
     session = UserSession(
@@ -402,7 +392,33 @@ def update_session(session, access_token):
     session.access_token = access_token
     db.session.commit()
 
-# Delete session on logout
+# # Delete session on logout
 def delete_session(session):
     db.session.delete(session)
     db.session.commit()
+
+# Delete previous sessions. Shouldnt happen, but if it does, delete them
+def delete_existing_sessions(username):
+    sessions = UserSession.query.filter_by(username=username).all()
+    for session in sessions:
+        db.session.delete(session)
+    db.session.commit()
+
+# Create csrf token and set cookies for temporary access token (MFA) manually due to redirect
+def set_temp_redirect_cookies(response, temp_token):
+    csrf_temp_token = get_csrf_token(temp_token)
+
+    # Set temporary access token cookie duration to 5 minutes
+    response.set_cookie('access_token_cookie', temp_token, max_age=5*60, secure=True, httponly=True, samesite='Strict')
+    response.set_cookie('csrf_access_token', csrf_temp_token, max_age=5*60, secure=True, httponly=False, samesite='Strict')
+
+# Create csrf token and set cookies for access and refresh tokens manually due to redirect
+def set_redirect_cookies(response, access_token, refresh_token):
+    csrf_access_token = get_csrf_token(access_token)
+    csrf_refresh_token = get_csrf_token(refresh_token)
+
+    # Set access token cookie duration to 15 minutes and refresh token to 7 days
+    response.set_cookie('access_token_cookie', access_token, max_age=15*60, secure=True, httponly=True, samesite='Strict')
+    response.set_cookie('refresh_token_cookie', refresh_token, max_age=7*24*60*60, secure=True, httponly=True, samesite='Strict')
+    response.set_cookie('csrf_access_token', csrf_access_token, max_age=15*60, secure=True, httponly=False, samesite='Strict')
+    response.set_cookie('csrf_refresh_token', csrf_refresh_token, max_age=7*24*60*60, secure=True, httponly=False, samesite='Strict')

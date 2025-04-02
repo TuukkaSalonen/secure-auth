@@ -6,4 +6,4 @@ TODO:\
 Active/inactive account?\
 Notifications\
 Styling\
-Extended functionality beyond login
+Extended functionality beyond login\

@@ -71,7 +71,7 @@ const Register: React.FC = () => {
         <button type="submit">Register</button>
       </form>
       <button onClick={handleHome}>Cancel</button>
-      <Link to="/login">Already have an account? Login here</Link>
+      <Link to="/login">Login with existing account, Google or GitHub here</Link>
     </div>
   );
 };
