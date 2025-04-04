@@ -9,16 +9,32 @@ export default defineConfig({
       name: "custom-middleware",
       configureServer(server) {
         server.middlewares.use((_, res, next) => {
+          // Set security headers
           res.setHeader("X-Frame-Options", "DENY");
           res.setHeader("X-Content-Type-Options", "nosniff");
+
+          // Content Security Policy
           res.setHeader(
             "Content-Security-Policy",
-            "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';"
+            "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self';"
           );
+
+          // Isolation
+          res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
           res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+
+          // Permissions
           res.setHeader("Permissions-Policy", "interest-cohort=()");
-          
+
+          // Cache control
+          res.setHeader(
+            "Cache-Control",
+            "no-store, no-cache, must-revalidate, proxy-revalidate"
+          );
+          res.setHeader("Pragma", "no-cache");
+          res.setHeader("Expires", "0");
+
           next();
         });
       },

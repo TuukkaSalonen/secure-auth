@@ -7,3 +7,6 @@ Active/inactive account?\
 Notifications\
 Styling\
 Extended functionality beyond login\
+
+Added:
+Security headers (vite config)
