@@ -16,7 +16,7 @@ export default defineConfig({
           // Content Security Policy
           res.setHeader(
             "Content-Security-Policy",
-            "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self';"
+            "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self';"
           );
 
           // Isolation
@@ -28,10 +28,11 @@ export default defineConfig({
           res.setHeader("Permissions-Policy", "interest-cohort=()");
 
           // Cache control
-          res.setHeader(
-            "Cache-Control",
-            "no-store, no-cache, must-revalidate, proxy-revalidate"
-          );
+          // res.setHeader(
+          //   "Cache-Control",
+          //   "no-store, no-cache, must-revalidate, proxy-revalidate"
+          // );
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
           res.setHeader("Pragma", "no-cache");
           res.setHeader("Expires", "0");
 
