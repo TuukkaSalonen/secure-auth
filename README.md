@@ -8,5 +8,5 @@ Notifications\
 Styling\
 Extended functionality beyond login\
 
-Added:
+Added based on pipeline:
 Security headers (vite config)
