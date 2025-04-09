@@ -39,7 +39,7 @@ def refresh():
     current_user = get_jwt_identity()
     claims = get_jwt()
     
-    if not current_user:
+    if not current_user or not claims:
         return jsonify(message="Invalid user"), 401
     
     user = User.query.filter_by(id=current_user).first()
@@ -110,11 +110,16 @@ def login():
 @app.route('/api/login/google', methods=['GET'])
 @limiter.limit("10 per minute")
 def login_google():
-    return oauth.google.authorize_redirect(app.config['GOOGLE_REDIRECT_URI'])
+    return oauth.google.authorize_redirect(app.config['GOOGLE_REDIRECT_URI'], prompt="select_account")
 
 # Callback for Google OAuth
 @app.route('/api/login/google/callback', methods=['GET'])
 def google_callback():
+    error = request.args.get('error')
+    if error:
+        redirect_response = make_response(redirect(app.config['FRONTEND_URL']))
+        return redirect_response, 302
+    
     token = oauth.google.authorize_access_token()
     if not token:
         return jsonify(message="Invalid token"), 400

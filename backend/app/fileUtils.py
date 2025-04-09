@@ -6,21 +6,22 @@ kek = Config.MASTER_KEY # The Master Encryption Key
 
 # Encrypts file data using AES encryption with user specific key
 def encrypt_file(file_bytes, user):
-    user_key = user.decrypt_user_key()
+    user_key = user.decrypt_user_key()  # Decrypt user-specific key
     
-    aes_key = os.urandom(32)
-    iv = os.urandom(16)
+    # Generate AES key and IV
+    aes_key = os.urandom(32)  # AES-256 key (32 bytes)
+    iv = os.urandom(16)       # 128-bit IV for CBC mode
     
     # Pad file data to 16 bytes (AES block size)
     padded_data = file_bytes + b"\0" * (16 - len(file_bytes) % 16)
 
-    # Encrypt the file data
+    # Encrypt file data
     cipher = Cipher(algorithms.AES(aes_key), modes.CBC(iv))
     encryptor = cipher.encryptor()
     encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
 
-    # Encrypt the AES key using the user's key
-    cipher_key = Cipher(algorithms.AES(user_key), modes.CBC(iv))
+    # Encrypt the AES key using the user's encryption key
+    cipher_key = Cipher(algorithms.AES(user_key), modes.CBC(iv))  # Use user-specific key for AES
     key_encryptor = cipher_key.encryptor()
     encrypted_aes_key = key_encryptor.update(aes_key) + key_encryptor.finalize()
 
@@ -29,7 +30,7 @@ def encrypt_file(file_bytes, user):
 
 # Decrypts file data using AES decryption with user specific key
 def decrypt_file(encrypted_data, encrypted_key, iv, user):
-    user_key = user.decrypt_user_key()
+    user_key = user.decrypt_user_key()  # Decrypt user-specific key
         
     # Decrypt the AES key using the user's key
     cipher_key = Cipher(algorithms.AES(user_key), modes.CBC(iv))
@@ -41,7 +42,7 @@ def decrypt_file(encrypted_data, encrypted_key, iv, user):
     decryptor = cipher.decryptor()
     decrypted_data = decryptor.update(encrypted_data) + decryptor.finalize()
 
-    # Remove padding
+    # Remove padding from decrypted data
     decrypted_data = decrypted_data.rstrip(b"\0")
 
     return decrypted_data

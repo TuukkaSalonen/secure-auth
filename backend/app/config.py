@@ -29,7 +29,6 @@ class Config:
     GITHUB_REDIRECT_URI = os.getenv('GITHUB_REDIRECT_URI')
     MASTER_KEY = os.getenv('MASTER_KEY')
 
-
 # Content Security Policy
 csp = {
     'default-src': ["'self'"],

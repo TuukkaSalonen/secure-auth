@@ -64,7 +64,7 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className={styles["homeContainer"]}>
+    <div className={styles.homeContainer}>
       <h2>Welcome to the Secure Programming Application</h2>
       {isAuthenticated ? (
         <>

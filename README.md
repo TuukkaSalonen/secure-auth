@@ -1,6 +1,7 @@
 # Secure Programming Project
 Secure login with OAuth and Authenticator (TOTP) features\
-Login with Google or GitHub account
+Login with Google or GitHub account\
+File upload and download with encryption
 
 TODO:\
 Active/inactive account?\
@@ -9,6 +10,8 @@ Styling\
 Extended functionality beyond login\
 Protect routes
 Add try/catch
+Check OWASP Top 10
+Tests?
 
 Tiedosto ei toimi: docx
 
