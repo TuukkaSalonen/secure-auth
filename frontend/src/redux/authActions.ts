@@ -1,8 +1,7 @@
 import { LOGIN, LOGOUT, SET_USER, SET_MFA } from "./constants";
 
-export const login = (token: string) => ({
-  type: LOGIN,
-  payload: token,
+export const login = () => ({
+  type: LOGIN
 });
 
 export const logout = () => ({

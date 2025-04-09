@@ -52,8 +52,7 @@ oauth.register(
 )
 
 # Setup CORS
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
-
+CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}}, supports_credentials=True, expose_headers=["Content-Disposition"])
 
 # Initialize Talisman
 Talisman(app, content_security_policy=csp, frame_options='DENY') 

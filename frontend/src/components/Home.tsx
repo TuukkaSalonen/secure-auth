@@ -69,6 +69,9 @@ const Home: React.FC = () => {
       {isAuthenticated ? (
         <>
           <p>Hello, {username}</p>
+          <Link to="/files">
+            <button className={styles.btn}>Files</button>
+          </Link>
           {mfaEnabled ? (
             <>
               <p>Multi-factor authentication is currently enabled.</p>

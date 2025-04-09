@@ -30,7 +30,7 @@ export const checkLoggedIn = async (dispatch: AppDispatch) => {
     });
     if (response.ok) {
       const data = await response.json();
-      dispatch(login(data.access_token));
+      dispatch(login());
       dispatch(setUser(data.user));
       dispatch(setMFA(data.mfa_enabled));
       return true;
@@ -57,7 +57,7 @@ export const refreshToken = async (dispatch: AppDispatch) => {
 
     if (response.ok) {
       const data = await response.json();
-      dispatch(login(data.access_token));
+      dispatch(login());
       dispatch(setUser(data.user));
       return true;
     }
@@ -125,7 +125,7 @@ export const postLogin = async (
     });
     const data = await response.json();
     if (response.ok) {
-      dispatch(login(data.access_token));
+      dispatch(login());
       dispatch(setUser(data.user));
       return { success: true, message: data.message };
     }
@@ -160,7 +160,7 @@ export const verifyLoginMFA = async (
     );
     const data = await response.json();
     if (response.ok) {
-      dispatch(login(data.access_token));
+      dispatch(login());
       dispatch(setUser(data.user));
       dispatch(setMFA(data.mfa_enabled));
       return { success: true, message: "MFA Verified" };

@@ -7,6 +7,10 @@ Active/inactive account?\
 Notifications\
 Styling\
 Extended functionality beyond login\
+Protect routes
+Add try/catch
+
+Tiedosto ei toimi: docx
 
 Added based on pipeline:
 Security headers (vite config)

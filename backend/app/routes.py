@@ -4,12 +4,13 @@ import io
 from flask_jwt_extended import get_csrf_token, decode_token, get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
 from . import db
 from . import app 
-from .models import User, UserSession
+from .models import User, UserSession, UploadedFile
 import pyotp
 import qrcode
 from .validators import check_login_input, check_mfa_input
 from . import oauth
 from . import limiter
+from . fileUtils import encrypt_file, decrypt_file
 
 # Check if the JWT is valid
 @app.route('/api/check', methods=['GET'])
@@ -25,8 +26,10 @@ def check_token():
     if claims.get('temporary_token', False): # Temporary token for MFA
         return jsonify(message="MFA required"), 403
     
-    mfa_enabled = claims.get('mfa_enabled', False)
-    return jsonify(user=current_user, mfa_enabled=mfa_enabled), 200
+    user = User.query.filter_by(id=current_user).first()
+    mfa_enabled = user.mfa_enabled 
+
+    return jsonify(user=user.username, mfa_enabled=mfa_enabled), 200
 
 # Refresh access token with refresh token
 @app.route('/api/refresh', methods=['POST'])
@@ -39,8 +42,12 @@ def refresh():
     if not current_user:
         return jsonify(message="Invalid user"), 401
     
+    user = User.query.filter_by(id=current_user).first()
+    if not user:
+        return jsonify(message="User not found"), 404
+    
     # Check the session for the user
-    existing_session = UserSession.query.filter_by(username=current_user).first()
+    existing_session = UserSession.query.filter_by(user_id=current_user).first()
     if not existing_session:
         return jsonify(message="Session expired, please log in again."), 401
     
@@ -57,7 +64,7 @@ def refresh():
     access_token = create_access_token(identity=current_user, additional_claims={ 'mfa_enabled': mfa_enabled })
     update_session(existing_session, access_token)
 
-    response = jsonify(user=current_user, mfa_enabled=mfa_enabled)
+    response = jsonify(user=user.username, mfa_enabled=mfa_enabled)
     set_access_cookies(response, access_token, 15*60)
     
     return response, 200
@@ -81,15 +88,15 @@ def login():
 
     if user and user.password_hash and user.check_password(password):
         if user.mfa_enabled:
-            temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
+            temp_token = create_access_token(identity=user.id, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
             response = jsonify(message="MFA required", mfa_required=True)
             set_access_cookies(response, temp_token, 5*60)
             return response, 403
 
-        access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled })
-        refresh_token = create_refresh_token(identity=username)
+        access_token = create_access_token(identity=user.id, additional_claims={ "mfa_enabled": user.mfa_enabled })
+        refresh_token = create_refresh_token(identity=user.id)
 
-        create_session(username, access_token, refresh_token)
+        create_session(user.id, access_token, refresh_token)
         response = jsonify(user=username, mfa_enabled=user.mfa_enabled)
 
         set_access_cookies(response, access_token, 15*60)
@@ -124,17 +131,17 @@ def google_callback():
         db.session.commit()
 
     if user.mfa_enabled:
-        temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
+        temp_token = create_access_token(identity=user.id, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
         # Need to add cookies manually for redirect response
         redirect_response = make_response(redirect(f"{app.config['FRONTEND_URL']}/login?mfa_required=true"))
         set_temp_redirect_cookies(redirect_response, temp_token)
         
         return redirect_response, 302
 
-    access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled })
-    refresh_token = create_refresh_token(identity=username)
+    access_token = create_access_token(identity=user.id, additional_claims={ "mfa_enabled": user.mfa_enabled })
+    refresh_token = create_refresh_token(identity=user.id)
 
-    create_session(username, access_token, refresh_token)
+    create_session(user.id, access_token, refresh_token)
 
     # Need to add cookies manually for redirect response
     redirect_response = make_response(redirect(app.config['FRONTEND_URL']))
@@ -167,17 +174,17 @@ def github_callback():
         db.session.commit()
 
     if user.mfa_enabled:
-        temp_token = create_access_token(identity=username, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
+        temp_token = create_access_token(identity=user.id, additional_claims={"temporary_token": True }, expires_delta=timedelta(minutes=5))
         # Need to add cookies manually for redirect response
         redirect_response = make_response(redirect(f"{app.config['FRONTEND_URL']}/login?mfa_required=true"))
         set_temp_redirect_cookies(redirect_response, temp_token)
 
         return redirect_response, 302
 
-    access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": user.mfa_enabled })
-    refresh_token = create_refresh_token(identity=username)
+    access_token = create_access_token(identity=user.id, additional_claims={ "mfa_enabled": user.mfa_enabled })
+    refresh_token = create_refresh_token(identity=user.id)
 
-    create_session(username, access_token, refresh_token)
+    create_session(user.id, access_token, refresh_token)
 
     # Need to add cookies manually for redirect response
     redirect_response = make_response(redirect(app.config['FRONTEND_URL']))
@@ -249,7 +256,7 @@ def verify_mfa():
     if not current_user:
         return jsonify(message="Invalid user"), 403
 
-    user = User.query.filter_by(username=current_user).first()
+    user = User.query.filter_by(id=current_user).first()
     if not user:
         return jsonify(message="User not found"), 404
     
@@ -265,7 +272,7 @@ def verify_mfa():
     access_token = create_access_token(identity=current_user, additional_claims={"mfa_enabled": True })
     refresh_token = create_refresh_token(identity=current_user)
     
-    response = jsonify(user=current_user, mfa_enabled=True)
+    response = jsonify(user=user.username, mfa_enabled=True)
     set_access_cookies(response, access_token, 15*60)
     set_refresh_cookies(response, refresh_token, 7*24*60*60)
 
@@ -276,8 +283,8 @@ def verify_mfa():
 @limiter.limit("5 per minute")
 @jwt_required()
 def generate_mfa_qr():
-    username = get_jwt_identity()
-    user = User.query.filter_by(username=username).first()
+    user_id = get_jwt_identity()
+    user = User.query.filter_by(id=user_id).first()
     if not user:
         return jsonify(message="User not found"), 404
 
@@ -289,7 +296,7 @@ def generate_mfa_qr():
     db.session.commit()
 
     issuer = "Secure Programming Application"
-    qr_uri = totp.provisioning_uri(name=username, issuer_name=issuer)
+    qr_uri = totp.provisioning_uri(name=user.username, issuer_name=issuer)
 
     qr = qrcode.make(qr_uri)
     img_io = io.BytesIO()
@@ -303,8 +310,8 @@ def generate_mfa_qr():
 @limiter.limit("5 per minute")
 @jwt_required()
 def verify_mfa_setup():
-    username = get_jwt_identity()
-    user = User.query.filter_by(username=username).first()
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(id=current_user).first()
     if not user:
         return jsonify(message="User not found"), 404
     
@@ -324,7 +331,7 @@ def verify_mfa_setup():
         db.session.commit()
         
         response = jsonify(message="MFA successfully enabled")
-        access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": True })
+        access_token = create_access_token(identity=current_user, additional_claims={ "mfa_enabled": True })
         set_access_cookies(response, access_token, 15*60)
 
         return response, 200
@@ -336,8 +343,8 @@ def verify_mfa_setup():
 @limiter.limit("5 per hour")
 @jwt_required()
 def remove_mfa():
-    username = get_jwt_identity()
-    user = User.query.filter_by(username=username).first()
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(id=current_user).first()
     if not user:
         return jsonify(message="User not found"), 404
     
@@ -358,12 +365,120 @@ def remove_mfa():
         db.session.commit()
         
         response = jsonify(message="MFA successfully disabled")
-        access_token = create_access_token(identity=username, additional_claims={ "mfa_enabled": False })
+        access_token = create_access_token(identity=current_user, additional_claims={ "mfa_enabled": False })
         set_access_cookies(response, access_token, 15*60)
 
         return response, 200
     
     return jsonify(message="Invalid TOTP code"), 401
+
+# Upload a file
+@app.route('/api/file/upload', methods=['POST'])
+@jwt_required()
+@limiter.limit("10 per minute")
+def upload_file():
+    current_user_id = get_jwt_identity()
+    if not current_user_id:
+        return jsonify(message="Invalid user"), 401
+
+    # Fetch the user from the database
+    user = User.query.filter_by(id=current_user_id).first()
+    if not user:
+        return jsonify(message="User not found"), 404
+
+    file = request.files.get('file')
+    if not file:
+        return jsonify(message="No file provided"), 400
+
+    file_bytes = file.read()
+    if not file_bytes:
+        return jsonify(message="Empty file"), 400
+
+    # Encrypt the file using the user's key
+    encrypted_data, encrypted_key, iv = encrypt_file(file_bytes, user)
+
+    # Save the encrypted data and metadata to the database
+    uploaded_file = UploadedFile(
+        user_id=current_user_id,
+        filename=file.filename,
+        mimetype=file.mimetype,
+        file_size=len(file_bytes),
+        encrypted_data=encrypted_data,
+        encrypted_key=encrypted_key,
+        iv=iv,
+        uploaded_at=datetime.now(timezone.utc)
+    )
+    
+    db.session.add(uploaded_file)
+    db.session.commit()
+
+    return jsonify(message="File uploaded successfully"), 201
+
+# Download a file
+@app.route('/api/file/download/<file_id>', methods=['GET'])
+@jwt_required()
+def download_file(file_id):
+    current_user = get_jwt_identity()
+    if not current_user:
+        return jsonify(message="Invalid user"), 401
+
+    uploaded_file = UploadedFile.query.filter_by(id=file_id, user_id=current_user).first()
+    if not uploaded_file:
+        return jsonify(message="File not found"), 404
+
+    # Fetch the user from the database to get their encryption key
+    user = User.query.filter_by(id=current_user).first()
+    if not user:
+        return jsonify(message="User not found"), 404
+
+    # Decrypt the file data using the user's encryption key and the file's key and iv
+    decrypted_data = decrypt_file(uploaded_file.encrypted_data, uploaded_file.encrypted_key, uploaded_file.iv, user)
+    
+    response = make_response()
+    response.headers['Content-Disposition'] = f'attachment; filename={uploaded_file.filename}'
+    response.headers['Content-Type'] = uploaded_file.mimetype
+    response.data = decrypted_data
+
+    return response
+
+# List all files uploaded by the user
+@app.route('/api/file/list', methods=['GET'])
+@jwt_required()
+@limiter.limit("10 per minute")
+def list_files():
+    current_user_id = get_jwt_identity()
+    if not current_user_id:
+        return jsonify(message="Invalid user"), 401
+
+    uploaded_files = UploadedFile.query.filter_by(user_id=current_user_id).all()
+    files_list = [
+        {
+            'id': str(file.id),
+            'filename': file.filename,
+            'file_size': file.file_size,
+            'uploaded_at': file.uploaded_at.isoformat()
+        } for file in uploaded_files
+    ]
+
+    return jsonify(files=files_list), 200 
+
+# Delete a file
+@app.route('/api/file/delete/<file_id>', methods=['DELETE'])
+@jwt_required()
+@limiter.limit("10 per minute")
+def delete_file(file_id):
+    current_user = get_jwt_identity()
+    if not current_user:
+        return jsonify(message="Invalid user"), 401
+
+    uploaded_file = UploadedFile.query.filter_by(id=file_id, user_id=current_user).first()
+    if not uploaded_file:
+        return jsonify(message="File not found"), 404
+
+    db.session.delete(uploaded_file)
+    db.session.commit()
+
+    return jsonify(message="File deleted successfully"), 200
 
 # Get the JTI from a refresh token
 def get_jti_from_token(token):
@@ -371,13 +486,13 @@ def get_jti_from_token(token):
     return decoded_token['jti']
 
 # Create a new session
-def create_session(username, access_token, refresh_token=None):
-    delete_existing_sessions(username) # Delete previous sessions
+def create_session(user_id, access_token, refresh_token=None):
+    delete_existing_sessions(user_id) # Delete previous sessions
 
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     refresh_token_jti = get_jti_from_token(refresh_token)
     session = UserSession(
-        username=username,
+        user_id=user_id,
         access_token=access_token,
         refresh_token_jti=refresh_token_jti,
         expires_at=expires_at
@@ -397,8 +512,8 @@ def delete_session(session):
     db.session.commit()
 
 # Delete previous sessions. Shouldnt happen, but if it does, delete them
-def delete_existing_sessions(username):
-    sessions = UserSession.query.filter_by(username=username).all()
+def delete_existing_sessions(user_id):
+    sessions = UserSession.query.filter_by(user_id=user_id).all()
     for session in sessions:
         db.session.delete(session)
     db.session.commit()

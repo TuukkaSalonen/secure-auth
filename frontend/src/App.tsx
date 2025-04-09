@@ -9,6 +9,7 @@ import { checkLoggedIn, refreshToken } from "./api/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "./redux/authActions";
 import { RootState, AppDispatch } from "./redux/store";
+import Files from "./components/Files";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,34 +25,32 @@ const App: React.FC = () => {
       }
     };
     loginCheck();
-  }
-  , [dispatch]);
+  }, [dispatch]);
 
   // If user is logged in, set up interval to refresh token
   useEffect(() => {
     if (!auth.isAuthenticated) return;
-      const refreshInterval = setInterval(async () => {
-        const loggedIn = await refreshToken(dispatch);
-        if (!loggedIn) {
-          clearInterval(refreshInterval);
-          dispatch(logout());
-        }
-      }, 14 * 60 * 1000); // 14 minutes
-
-      return () => {
+    const refreshInterval = setInterval(async () => {
+      const loggedIn = await refreshToken(dispatch);
+      if (!loggedIn) {
         clearInterval(refreshInterval);
-      };
-    }, [dispatch, auth.isAuthenticated]);
+        dispatch(logout());
+      }
+    }, 10 * 60 * 1000); // 10 minutes
+
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [dispatch, auth.isAuthenticated]);
 
   return (
     <Router>
       <div className="app-container">
         <Routes>
           <Route path="/" element={<Home />} />
-          {auth.user ? (
+          {auth.isAuthenticated ? (
             <>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/files" element={<Files />} />
             </>
           ) : (
             <>
