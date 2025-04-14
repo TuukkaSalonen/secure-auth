@@ -5,11 +5,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { logOut, setupMFA, verifySetupMFA, disableMFA } from "../api/auth";
 import { setMFA } from "../redux/authActions";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 const Home: React.FC = () => {
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
+  const loading = useSelector((state: RootState) => state.auth.loading);
   const mfaEnabled = useSelector((state: RootState) => state.auth.mfa_enabled);
   const username = useSelector((state: RootState) => state.auth.user);
   const [openMfa, setOpenMfa] = useState(false);
@@ -65,86 +68,96 @@ const Home: React.FC = () => {
 
   return (
     <div className={styles.homeContainer}>
-      <h2>Welcome to the Secure Programming Application</h2>
-      {isAuthenticated ? (
+      {loading ? (
         <>
-          <p>Hello, {username}</p>
-          <Link to="/files">
-            <button className={styles.btn}>Files</button>
-          </Link>
-          {mfaEnabled ? (
-            <>
-              <p>Multi-factor authentication is currently enabled.</p>
-              {!openMfa ? (
-                <button onClick={handleMFADisable} className={styles.btn}>
-                  Disable MFA
-                </button>
-              ) : (
-                <>
-                  <div>
-                    <p>Enter your MFA code to disable MFA:</p>
-                    <input
-                      type="number"
-                      value={mfaCode}
-                      onChange={(e) => setMfaCode(e.target.value)}
-                    />
-                    <button
-                      onClick={handleMFADisableSubmit}
-                      className={styles.btn}
-                    >
-                      Submit
-                    </button>
-                  </div>
-                  <button onClick={handleCloseMfa} className={styles.btn}>
-                    Cancel
-                  </button>
-                </>
-              )}
-            </>
-          ) : (
-            <div>
-              <p>Multi Factor Authentication is not enabled</p>
-              {!openMfa ? (
-                <button onClick={handleOpenMfa} className={styles.btn}>
-                  Enable MFA
-                </button>
-              ) : (
-                <>
-                  <div>
-                    <p>Scan the QR code with your authenticator app:</p>
-                    {qrcode && <img src={qrcode} alt="qrcode" />}
-                    <input
-                      type="number"
-                      value={mfaCode}
-                      onChange={(e) => setMfaCode(e.target.value)}
-                    />
-                    <button onClick={handleMFASubmit} className={styles.btn}>
-                      Submit
-                    </button>
-                  </div>
-                  <button onClick={handleCloseMfa} className={styles.btn}>
-                    Cancel
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-          <button onClick={handleLogOut} className={styles.btn}>
-            Logout
-          </button>
+          <h2>Welcome to the Secure Programming Application</h2>
+          <div className={styles.loadingContainer}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+          </div>
         </>
       ) : (
         <>
-          <p>Log in or register to continue.</p>
-
-          <div className={styles.buttonContainer}>
-            <Link to="/login">
-              <button className={styles.btn}>Login</button>
-            </Link>
-            <Link to="/register">
-              <button className={styles.btn}>Register</button>
-            </Link>
-          </div>
+          <h2>Welcome to the Secure Programming Application</h2>
+          {isAuthenticated ? (
+            <>
+              <p>Hello, {username}</p>
+              <Link to="/files">
+                <button className={styles.btn}>Files</button>
+              </Link>
+              {mfaEnabled ? (
+                <>
+                  <p>Multi-factor authentication is currently enabled.</p>
+                  {!openMfa ? (
+                    <button onClick={handleMFADisable} className={styles.btn}>
+                      Disable MFA
+                    </button>
+                  ) : (
+                    <>
+                      <div>
+                        <p>Enter your MFA code to disable MFA:</p>
+                        <input
+                          type="number"
+                          value={mfaCode}
+                          onChange={(e) => setMfaCode(e.target.value)}
+                        />
+                        <button
+                          onClick={handleMFADisableSubmit}
+                          className={styles.btn}
+                        >
+                          Submit
+                        </button>
+                      </div>
+                      <button onClick={handleCloseMfa} className={styles.btn}>
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </>
+              ) : (
+                <div>
+                  <p>Multi Factor Authentication is not enabled</p>
+                  {!openMfa ? (
+                    <button onClick={handleOpenMfa} className={styles.btn}>
+                      Enable MFA
+                    </button>
+                  ) : (
+                    <>
+                      <div>
+                        <p>Scan the QR code with your authenticator app:</p>
+                        {qrcode && <img src={qrcode} alt="qrcode" />}
+                        <input
+                          type="number"
+                          value={mfaCode}
+                          onChange={(e) => setMfaCode(e.target.value)}
+                        />
+                        <button onClick={handleMFASubmit} className={styles.btn}>
+                          Submit
+                        </button>
+                      </div>
+                      <button onClick={handleCloseMfa} className={styles.btn}>
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+              <button onClick={handleLogOut} className={styles.btn}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <p>Log in or register to continue.</p>
+              <div className={styles.buttonContainer}>
+                <Link to="/login">
+                  <button className={styles.btn}>Login</button>
+                </Link>
+                <Link to="/register">
+                  <button className={styles.btn}>Register</button>
+                </Link>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "./redux/authActions";
 import { RootState, AppDispatch } from "./redux/store";
 import Files from "./components/Files";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -48,7 +49,7 @@ const App: React.FC = () => {
       <div className="app-container">
         <Routes>
           <Route path="/" element={<Home />} />
-          {auth.isAuthenticated ? (
+          {/* {auth.isAuthenticated ? (
             <>
               <Route path="/files" element={<Files />} />
             </>
@@ -57,7 +58,17 @@ const App: React.FC = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </>
-          )}
+          )} */}
+          <Route
+            path="/files"
+            element={
+              <ProtectedRoute>
+                <Files />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </Router>

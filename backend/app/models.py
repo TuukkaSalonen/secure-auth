@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
-from .keyUtils import encrypt_secret_MFA, decrypt_secret_MFA, encrypt_user_key, decrypt_user_key
+from .keyUtils import encrypt_secret_MFA, decrypt_secret_MFA, generate_user_key, decrypt_user_key
 
 # User model
 class User(db.Model):
@@ -16,7 +16,7 @@ class User(db.Model):
     mfa_enabled = db.Column(db.Boolean, default=False)
     mfa_secret_hash = db.Column(db.String(255), nullable=True)
     sso_provider = db.Column(db.String(50), nullable=True)
-    user_key = db.Column(db.LargeBinary, nullable=True)
+    encrypted_user_key = db.Column(db.LargeBinary, nullable=True)
     iv = db.Column(db.LargeBinary, nullable=True)
  
     def __init__(self, username, password=None, sso_provider=None):
@@ -25,7 +25,7 @@ class User(db.Model):
             self.password_hash = generate_password_hash(password) 
         if sso_provider:
             self.sso_provider = sso_provider
-        self.user_key, self.iv = encrypt_user_key(os.urandom(32)) # Generate a random user key and encrypt it on register
+        self.encrypted_user_key, self.iv = generate_user_key() # Generate a random user key and encrypt it on register
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -37,7 +37,7 @@ class User(db.Model):
         return decrypt_secret_MFA(self.mfa_secret_hash)
     
     def decrypt_user_key(self):
-        return decrypt_user_key(self.user_key, self.iv)
+        return decrypt_user_key(self.encrypted_user_key, self.iv)
 
 # User session model   
 class UserSession(db.Model):
@@ -67,7 +67,9 @@ class UploadedFile(db.Model):
 
     encrypted_data = db.Column(db.LargeBinary, nullable=False)
     encrypted_key = db.Column(db.LargeBinary, nullable=False)
-    iv = db.Column(db.LargeBinary, nullable=False)
+
+    iv_file = db.Column(db.LargeBinary, nullable=False)
+    iv_key = db.Column(db.LargeBinary, nullable=False)
 
     uploaded_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 

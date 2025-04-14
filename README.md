@@ -4,16 +4,12 @@ Login with Google or GitHub account\
 File upload and download with encryption
 
 TODO:\
-Active/inactive account?\
 Notifications\
 Styling\
-Extended functionality beyond login\
-Protect routes
-Add try/catch
-Check OWASP Top 10
-Tests?
+Add try/catch\
+Check OWASP Top 10\
+Tests?\
+Make own route for 2FA in frontend
 
-Tiedosto ei toimi: docx
-
-Added based on pipeline:
+Added based on pipeline:\
 Security headers (vite config)

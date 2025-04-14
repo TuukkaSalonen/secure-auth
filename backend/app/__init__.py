@@ -61,7 +61,7 @@ Talisman(app, content_security_policy=csp, frame_options='DENY')
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["500 per day", "60 per hour"],
+    default_limits=["1000 per day", "200 per hour"],
 )
 
 session_cleanup.scheduler.start()

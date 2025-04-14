@@ -6,8 +6,8 @@ load_dotenv()
 
 class Config:
     FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
-    SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-jwt-secret-key')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'secret-key')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_TOKEN_LOCATION = ["cookies"]

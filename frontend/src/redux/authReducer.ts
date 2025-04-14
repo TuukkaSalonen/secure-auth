@@ -4,12 +4,14 @@ type AuthState = {
   isAuthenticated: boolean;
   user?: string | null;
   mfa_enabled?: boolean | null;
+  loading?: boolean;
 };
 
 const initialState: AuthState = {
   isAuthenticated: false,
   user: null,
   mfa_enabled: null,
+  loading: true,
 };
 
 interface AuthAction {
@@ -20,9 +22,9 @@ interface AuthAction {
 const authReducer = (state = initialState, action: AuthAction): AuthState => {
   switch (action.type) {
     case LOGIN:
-      return { ...state, isAuthenticated: true };
+      return { ...state, isAuthenticated: true, loading: false };
     case LOGOUT:
-      return initialState;
+      return {...initialState, loading: false};
     case SET_USER:
       return { ...state, user: typeof action.payload === 'string' ? action.payload : state.user };
     case SET_MFA:

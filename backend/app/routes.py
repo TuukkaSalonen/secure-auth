@@ -14,7 +14,7 @@ from . fileUtils import encrypt_file, decrypt_file
 
 # Check if the JWT is valid
 @app.route('/api/check', methods=['GET'])
-@limiter.limit("15 per minute")
+@limiter.limit("30 per minute")
 @jwt_required()
 def check_token():
     current_user = get_jwt_identity()
@@ -33,7 +33,7 @@ def check_token():
 
 # Refresh access token with refresh token
 @app.route('/api/refresh', methods=['POST'])
-@limiter.limit("15 per minute")
+@limiter.limit("30 per minute")
 @jwt_required(refresh=True)
 def refresh():
     current_user = get_jwt_identity()
@@ -114,6 +114,7 @@ def login_google():
 
 # Callback for Google OAuth
 @app.route('/api/login/google/callback', methods=['GET'])
+@limiter.limit("10 per minute")
 def google_callback():
     error = request.args.get('error')
     if error:
@@ -162,6 +163,7 @@ def login_github():
 
 # Callback for GitHub OAuth
 @app.route('/api/login/github/callback', methods=['GET'])
+@limiter.limit("10 per minute")
 def github_callback():
     token = oauth.github.authorize_access_token()
     if not token:
@@ -197,8 +199,9 @@ def github_callback():
 
     return redirect_response, 302
 
-# Logout, clear session and cookies. Allows for optional JWT to delete cookeis if they are not correct
+# Logout, clear session and cookies. Allows for optional JWT to delete cookies if they are not correct
 @app.route('/api/logout', methods=['POST'])
+@limiter.limit("10 per minute")
 @jwt_required(optional=True)
 def logout():
     current_user = get_jwt_identity()
@@ -217,7 +220,7 @@ def logout():
 
 # Register new user
 @app.route('/api/register', methods=['POST'])
-@limiter.limit("5 per minute")
+@limiter.limit("10 per minute")
 def register():
     data = request.json
     if not data or not isinstance(data, dict):
@@ -345,7 +348,7 @@ def verify_mfa_setup():
 
 # Remove MFA from this user
 @app.route('/api/mfa/disable', methods=['POST'])
-@limiter.limit("5 per hour")
+@limiter.limit("5 per minute")
 @jwt_required()
 def remove_mfa():
     current_user = get_jwt_identity()
@@ -379,8 +382,8 @@ def remove_mfa():
 
 # Upload a file
 @app.route('/api/file/upload', methods=['POST'])
+@limiter.limit("30 per minute")
 @jwt_required()
-@limiter.limit("10 per minute")
 def upload_file():
     current_user_id = get_jwt_identity()
     if not current_user_id:
@@ -399,18 +402,23 @@ def upload_file():
     if not file_bytes:
         return jsonify(message="Empty file"), 400
 
+    file_size = len(file_bytes)
+    if file_size > 100 * 1024 * 1024:  # Limit file size to 100 MB
+        return jsonify(message="File size exceeds limit"), 400
+    
     # Encrypt the file using the user's key
-    encrypted_data, encrypted_key, iv = encrypt_file(file_bytes, user)
+    encrypted_data, encrypted_key, iv_file, iv_key = encrypt_file(file_bytes, user)
 
     # Save the encrypted data and metadata to the database
     uploaded_file = UploadedFile(
         user_id=current_user_id,
         filename=file.filename,
         mimetype=file.mimetype,
-        file_size=len(file_bytes),
+        file_size=file_size,
         encrypted_data=encrypted_data,
         encrypted_key=encrypted_key,
-        iv=iv,
+        iv_file=iv_file,
+        iv_key=iv_key,
         uploaded_at=datetime.now(timezone.utc)
     )
     
@@ -421,6 +429,7 @@ def upload_file():
 
 # Download a file
 @app.route('/api/file/download/<file_id>', methods=['GET'])
+@limiter.limit("30 per minute")
 @jwt_required()
 def download_file(file_id):
     current_user = get_jwt_identity()
@@ -437,7 +446,7 @@ def download_file(file_id):
         return jsonify(message="User not found"), 404
 
     # Decrypt the file data using the user's encryption key and the file's key and iv
-    decrypted_data = decrypt_file(uploaded_file.encrypted_data, uploaded_file.encrypted_key, uploaded_file.iv, user)
+    decrypted_data = decrypt_file(uploaded_file.encrypted_data, uploaded_file.encrypted_key, uploaded_file.iv_file, uploaded_file.iv_key, user)
     
     response = make_response()
     response.headers['Content-Disposition'] = f'attachment; filename={uploaded_file.filename}'
@@ -448,8 +457,8 @@ def download_file(file_id):
 
 # List all files uploaded by the user
 @app.route('/api/file/list', methods=['GET'])
+@limiter.limit("30 per minute")
 @jwt_required()
-@limiter.limit("10 per minute")
 def list_files():
     current_user_id = get_jwt_identity()
     if not current_user_id:
@@ -469,8 +478,8 @@ def list_files():
 
 # Delete a file
 @app.route('/api/file/delete/<file_id>', methods=['DELETE'])
+@limiter.limit("30 per minute")
 @jwt_required()
-@limiter.limit("10 per minute")
 def delete_file(file_id):
     current_user = get_jwt_identity()
     if not current_user:
