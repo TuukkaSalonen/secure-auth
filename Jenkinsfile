@@ -11,8 +11,14 @@ pipeline {
     }
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
+        NVD_KEY = credentials('NVD')
     }
     stages {
+        stage('Check Python') {
+            steps {
+                sh 'python3 --version'
+            }
+        }
         stage('Clean Workspace') {
             steps {
                 cleanWs()
@@ -54,7 +60,7 @@ pipeline {
         }
         stage('SCA - Dependency Check') {
             steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey=d4af31fa-98a3-4043-966e-f1c918bff052 --noupdate --enableExperimental', odcInstallation: 'DP-Check'
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey=$NVD_KEY --enableExperimental', odcInstallation: 'DP-Check'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }

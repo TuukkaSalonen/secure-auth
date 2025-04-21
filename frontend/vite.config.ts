@@ -16,9 +16,8 @@ export default defineConfig(({ mode }) => {
             res.setHeader("X-Content-Type-Options", "nosniff");
 
             // Depending on the environment, set different CSP policies. In development, allow unsafe inline scripts and styles for Hot Module Reload (HMR).
-            const csp = isDev
-              ? "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';"
-              : "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';";
+            const csp = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';"
+              //: "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';";
 
             res.setHeader("Content-Security-Policy", csp);
 
