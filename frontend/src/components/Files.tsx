@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { uploadFile, downloadFile, getFiles, deleteFile } from "../api/files";
 import { Link } from "react-router-dom";
-//import styles from "./styles/Files.module.css";
+import styles from "./styles/Files.module.css";
 
 interface FileItem {
   id: string;
@@ -110,53 +110,64 @@ const Files: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className={styles.filesContainer}>
       <h1>Files</h1>
-      {fileList.length === 0 && <p>No files uploaded yet.</p>}
-      <ul>
-        {fileList.map((file: FileItem) => (
-          <li key={file.id}>
-            <span>{file.filename}</span>
-            <span> ({file.file_size} bytes)</span>
-            <span> - {new Date(file.uploaded_at).toLocaleDateString()}</span>
-            <button onClick={() => handleDownload(file.id)}>Download</button>
-            <button
-              style={{ backgroundColor: "red" }}
-              onClick={() => handleDelete(file.id)}
-            >
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
       <form onSubmit={handleSubmit}>
-        <div
-          {...getRootProps()}
-          style={{
-            border: "2px dashed #cccccc",
-            padding: "20px",
-            textAlign: "center",
-            cursor: "pointer",
-          }}
-        >
+        <div {...getRootProps()} className={styles.dropzone}>
           <input {...getInputProps()} />
+          {!file ? (
           <p>Drag & drop a file here, or click to select one</p>
+          ) : (
+            <p>Upload or clear the file using the buttons below.</p>
+          )}
           {file && (
-            <div style={{ marginTop: "10px", fontSize: "14px", color: "#333" }}>
+            <div className={styles.selectedFile}>
               <strong>Selected file:</strong> {file.name}
             </div>
           )}
         </div>
         {file && (
-          <>
-            <button type="submit">Upload</button>
-            <button type="button" onClick={() => setFile(null)}>
+          <div className={styles.fileActions}>
+            <button className={styles.btn} type="submit">
+              Upload
+            </button>
+            <button
+              className={styles.btn}
+              type="button"
+              onClick={() => setFile(null)}
+            >
               Clear
             </button>
-          </>
+          </div>
         )}
       </form>
-      <Link to="/">Back to Home</Link>
+      {fileList.length === 0 && <p>No files uploaded yet.</p>}
+      <ul className={styles.fileList}>
+        {fileList.map((file: FileItem) => (
+          <li key={file.id} className={styles.fileItem}>
+            <span>{file.filename}</span>
+            <span>({file.file_size} bytes)</span>
+            <span>Uploaded at: {new Date(file.uploaded_at).toLocaleDateString()}</span>
+            <div>
+              <button
+                className={styles.btn}
+                onClick={() => handleDownload(file.id)}
+              >
+                Download
+              </button>
+              <button
+                className={`${styles.btn} ${styles.btnDelete}`}
+                onClick={() => handleDelete(file.id)}
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <Link to="/" className={styles.link}>
+        Back to Home
+      </Link>
     </div>
   );
 };

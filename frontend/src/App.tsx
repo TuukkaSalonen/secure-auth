@@ -11,6 +11,7 @@ import { logout } from "./redux/authActions";
 import { RootState, AppDispatch } from "./redux/store";
 import Files from "./components/Files";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { Authenticator } from "./components/Authenticator";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -49,21 +50,19 @@ const App: React.FC = () => {
       <div className="app-container">
         <Routes>
           <Route path="/" element={<Home />} />
-          {/* {auth.isAuthenticated ? (
-            <>
-              <Route path="/files" element={<Files />} />
-            </>
-          ) : (
-            <>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </>
-          )} */}
           <Route
             path="/files"
             element={
               <ProtectedRoute>
                 <Files />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mfa"
+            element={
+              <ProtectedRoute>
+                <Authenticator />
               </ProtectedRoute>
             }
           />

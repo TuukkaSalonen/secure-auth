@@ -1,0 +1,60 @@
+.AuthenticatorContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .loadingContainer {
+    margin-top: 1rem;
+  }
+
+  .qrCodeContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 400px;
+    width: 100%;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  .btn {
+    background-color: #007bff;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    margin: 0.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .btn:hover {
+    background-color: #0056b3;
+  }
+  
+  input[type="number"] {
+    margin: 0.5rem 0;
+    padding: 0.4rem 0.8rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  
+  img {
+    margin: 1rem 0;
+    max-width: 250px;
+    height: auto;
+  }
+  
+.link {
+    margin-top: 10px;
+}

@@ -80,3 +80,30 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+.homeBtn {
+  background-color: #007bff;
+  color: white;
+  padding: 0.7rem 1.2rem;
+  margin: 0.5rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease-in-out;
+  display: inline;
+  margin-top: 20px;
+}
+
+.homeLink {
+  background-color: #007bff;
+  color: white;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  margin-top: 0px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease-in-out;
+  display: inline;
+}
