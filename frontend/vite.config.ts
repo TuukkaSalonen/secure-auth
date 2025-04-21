@@ -1,9 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig(({ mode }) => {
-  const isDev = mode === "development";
-
+export default defineConfig(() => {
   return {
     plugins: [
       react(),
@@ -15,11 +13,13 @@ export default defineConfig(({ mode }) => {
             res.setHeader("X-Frame-Options", "DENY");
             res.setHeader("X-Content-Type-Options", "nosniff");
 
-            // Depending on the environment, set different CSP policies. In development, allow unsafe inline scripts and styles for Hot Module Reload (HMR).
+            // Depending on the environment, set different CSP policies.
             const csp = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';"
-              //: "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';";
 
             res.setHeader("Content-Security-Policy", csp);
+
+            // Permissions
+            res.setHeader("Permissions-Policy", "accelerometer=(), autoplay=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()");
 
             // Isolation
             res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
