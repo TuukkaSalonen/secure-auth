@@ -28,6 +28,8 @@ class Config:
     GITHUB_CLIENT_SECRET = os.getenv('GITHUB_CLIENT_SECRET')
     GITHUB_REDIRECT_URI = os.getenv('GITHUB_REDIRECT_URI')
     MASTER_KEY = os.getenv('MASTER_KEY')
+    PREFERRED_URL_SCHEME = os.getenv('PREFERRED_URL_SCHEME', 'http')
+    SERVER_NAME = os.getenv('SERVER_NAME', 'localhost:5000')
 
 # Content Security Policy
 csp = {

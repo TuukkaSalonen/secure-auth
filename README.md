@@ -13,4 +13,3 @@ Styling\
 Add try/catch\
 Check OWASP Top 10\
 Tests?\
-Make own route for 2FA in frontend
