@@ -2,6 +2,7 @@ import pytest
 from .. import app
 from ..db import db
 import http.cookies
+from app import limiter
 
 @pytest.fixture
 def client():
@@ -27,6 +28,7 @@ def client():
             db.session.remove()
             transaction.rollback()
             connection.close()
+            limiter.storage.reset()  # Clear the rate limiter storage
 
 @pytest.fixture
 def logged_in_client(client):
@@ -42,7 +44,7 @@ def logged_in_client(client):
 
     cookies = response.headers.getlist("Set-Cookie")
 
-    # Parse cookies and set them on the client manually
+    # Set cookies on the client
     for cookie in cookies:
         cookie_obj = http.cookies.SimpleCookie()
         cookie_obj.load(cookie)
@@ -151,6 +153,9 @@ def test_login_mfa_enabled(client):
         },
         follow_redirects=False
     )
+    set_cookie_headers = response.headers.getlist("Set-Cookie")
+    # Check for temporary short lived access token cookie for mfa login
+    assert any("access_token_cookie" in cookie for cookie in set_cookie_headers), "temporary access_token_cookie not found"
     assert response.status_code == 403  # MFA required
 
 # Test logout and cookie removal
@@ -167,12 +172,10 @@ def test_logout(client):
 
 # Test login without token
 def test_login_check(client):
-    # First, log in to get the access token
     login_response = client.get("/api/check", follow_redirects=False)
     assert login_response.status_code == 401  # Unauthorized, no token provided
 
 # Test refresh token without token and csrf token
 def test_refresh(client):
-    # First, log in to get the access token
     login_response = client.post("/api/refresh", follow_redirects=False)
     assert login_response.status_code == 401  # Unauthorized, no token provided

@@ -7,7 +7,7 @@ from . import app
 from .models import User, UserSession, UploadedFile
 import pyotp
 import qrcode
-from .validators import check_login_input, check_mfa_input
+from .validators import check_login_input, check_mfa_input, check_file_id
 from . import oauth
 from . import limiter
 from . fileUtils import encrypt_file, decrypt_file
@@ -435,15 +435,19 @@ def download_file(file_id):
     current_user = get_jwt_identity()
     if not current_user:
         return jsonify(message="Invalid user"), 401
-
-    uploaded_file = UploadedFile.query.filter_by(id=file_id, user_id=current_user).first()
-    if not uploaded_file:
-        return jsonify(message="File not found"), 404
-
+    
+    id_check = check_file_id(file_id)
+    if not id_check:
+        return jsonify(message="Invalid file ID"), 400
+    
     # Fetch the user from the database to get their encryption key
     user = User.query.filter_by(id=current_user).first()
     if not user:
         return jsonify(message="User not found"), 404
+
+    uploaded_file = UploadedFile.query.filter_by(id=file_id, user_id=current_user).first()
+    if not uploaded_file:
+        return jsonify(message="File not found"), 404
 
     # Decrypt the file data using the user's encryption key and the file's key and iv
     decrypted_data = decrypt_file(uploaded_file.encrypted_data, uploaded_file.encrypted_key, uploaded_file.iv_file, uploaded_file.iv_key, user)
@@ -453,7 +457,7 @@ def download_file(file_id):
     response.headers['Content-Type'] = uploaded_file.mimetype
     response.data = decrypted_data
 
-    return response
+    return response, 200
 
 # List all files uploaded by the user
 @app.route('/api/file/list', methods=['GET'])
@@ -484,7 +488,11 @@ def delete_file(file_id):
     current_user = get_jwt_identity()
     if not current_user:
         return jsonify(message="Invalid user"), 401
-
+    
+    id_check = check_file_id(file_id)
+    if not id_check:
+        return jsonify(message="Invalid file ID"), 400
+    
     uploaded_file = UploadedFile.query.filter_by(id=file_id, user_id=current_user).first()
     if not uploaded_file:
         return jsonify(message="File not found"), 404

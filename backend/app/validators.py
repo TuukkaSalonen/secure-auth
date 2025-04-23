@@ -1,5 +1,6 @@
 import re
 from password_validator import PasswordValidator
+import uuid
 
 # Password validation schema
 password_schema = PasswordValidator()
@@ -44,3 +45,13 @@ def check_mfa_input(code):
         return False, "Invalid code format (4-6 digits)"
 
     return True, "Valid input"
+
+# Function to validate the input for file id
+def check_file_id(file_id):
+    if not file_id:
+        return False, "File ID is required"
+    try:
+        file_uuid = uuid.UUID(file_id, version=4)
+        return str(file_uuid) == file_id
+    except ValueError:
+        return False

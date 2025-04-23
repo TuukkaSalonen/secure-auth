@@ -1,6 +1,7 @@
 import pytest
 from .. import app
 from ..db import db
+from app import limiter
 
 @pytest.fixture
 def client():
@@ -26,6 +27,8 @@ def client():
             db.session.remove()
             transaction.rollback()
             connection.close()
+            limiter.storage.reset()  # Clear the rate limiter storage
+
 
 # Test successful registration
 def test_register_success(client):
