@@ -45,7 +45,7 @@ def test_google_callback_success(client):
          patch("app.routes.set_redirect_cookies") as mock_set_redirect_cookies, \
          patch("app.routes.create_session") as mock_create_session:
 
-        # Mock the OAuth return values
+        # Mock the token and user info
         mock_authorize_access_token.return_value = {"access_token": "mock_token"}
         mock_google_get.return_value.json.return_value = {"email": "testuser@example.com"}
         mock_create_access_token.return_value = "mock_access_token"
@@ -61,7 +61,6 @@ def test_google_callback_success(client):
 def test_google_callback_invalid_token(client):
     with patch("app.routes.oauth.google.authorize_access_token") as mock_authorize_access_token:
         mock_authorize_access_token.return_value = None  # Simulate invalid token
-        
         response = client.get("/api/login/google/callback")
         assert response.status_code == 400  # Bad request for invalid token
 
