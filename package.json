@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"cd ./backend && python run.py runserver\" \"cd ./frontend && npm run dev\"",
-    "start": "concurrently \"cd ./backend && python run.py runserver\" \"cd ./frontend && npm run build && npm run preview\""
+    "start": "concurrently \"cd ./backend && python run.py runserver\" \"cd ./frontend && npm run build && npm run preview\"",
+    "test": "cd ./backend && pytest && cd ../frontend && npm test"
   },
   "repository": {
     "type": "git",

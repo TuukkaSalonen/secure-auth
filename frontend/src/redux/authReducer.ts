@@ -1,6 +1,6 @@
 import { LOGIN, LOGOUT, SET_USER, SET_MFA } from "./constants";
 
-type AuthState = {
+export type AuthState = {
   isAuthenticated: boolean;
   user?: string | null;
   mfa_enabled?: boolean | null;

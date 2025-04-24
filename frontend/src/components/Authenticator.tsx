@@ -72,7 +72,7 @@ export const Authenticator: React.FC = () => {
           <h1>Multi-Factor Authentication</h1>
           {mfaEnabled ? (
             <>
-              <p>Multi-factor authentication is currently enabled.</p>
+              <p>Multi-Factor authentication is currently enabled.</p>
               {!openMfa ? (
                 <button onClick={handleMFADisable} className={styles.btn}>
                   Disable MFA
@@ -101,7 +101,7 @@ export const Authenticator: React.FC = () => {
             </>
           ) : (
             <>
-              <p>Multi Factor Authentication is currently not enabled</p>
+              <p>Multi-Factor authentication is currently not enabled</p>
               {!openMfa ? (
                 <button onClick={handleOpenMfa} className={styles.btn}>
                   Enable MFA

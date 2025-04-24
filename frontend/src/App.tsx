@@ -12,6 +12,7 @@ import { RootState, AppDispatch } from "./redux/store";
 import Files from "./components/Files";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Authenticator } from "./components/Authenticator";
+import UnauthenticatedRoute from "./components/UnauthenticatedRoute";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -66,8 +67,22 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route
+            path="/login"
+            element={
+              <UnauthenticatedRoute>
+                <Login />
+              </UnauthenticatedRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <UnauthenticatedRoute>
+                <Register />
+              </UnauthenticatedRoute>
+            }
+          />
         </Routes>
       </div>
     </Router>
