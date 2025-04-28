@@ -8,7 +8,7 @@ import authReducer, { AuthState } from "../redux/authReducer";
 import Login from "../components/Login";
 import Register from "../components/Register";
 
-// Test cases for protected routes
+// Test cases for unprotected routes (not logged in)
 
 // Component render
 const renderWithAuthState = (authState: AuthState, initialRoute: string) => {

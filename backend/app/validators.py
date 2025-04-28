@@ -20,6 +20,7 @@ mfa_code_schema\
     .has().digits()\
     .has().no().spaces()
 
+# Email and username regex patterns
 email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
 username_regex = r'^[a-zA-Z0-9_]+$'
 

@@ -1,15 +1,19 @@
 import { getCSRFAccessToken } from "./auth";
+import { API_BASE_URL } from "../constants";
+
+// File upload, download, and delete API calls
+// CSRF tokens are sent with each request
 
 // Upload file to the server database
 export const uploadFile = async (formData: FormData) => {
   try {
     const csrfToken = await getCSRFAccessToken();
-    const response = await fetch("http://localhost:5000/api/file/upload", {
+    const response = await fetch(`${API_BASE_URL}/file/upload`, {
       method: "POST",
       body: formData,
       headers: {
         ...(csrfToken && { "X-CSRF-Token": csrfToken }),
-      }, 
+      },
       credentials: "include",
     });
     if (!response.ok) {
@@ -21,13 +25,13 @@ export const uploadFile = async (formData: FormData) => {
     console.error("Error uploading files:", error);
     return { success: false, message: "Error uploading files" };
   }
-}
+};
 
 // Download file from the server database
 export const downloadFile = async (fileId: string) => {
   try {
     const csrfToken = await getCSRFAccessToken();
-    const response = await fetch(`http://localhost:5000/api/file/download/${fileId}`, {
+    const response = await fetch(`${API_BASE_URL}/file/download/${fileId}`, {
       method: "GET",
       headers: {
         ...(csrfToken && { "X-CSRF-Token": csrfToken }),
@@ -58,13 +62,13 @@ export const downloadFile = async (fileId: string) => {
   } catch (error) {
     console.error("Error downloading file:", error);
   }
-}
+};
 
 // Delete file from the server database
 export const deleteFile = async (fileId: string) => {
   try {
     const csrfToken = await getCSRFAccessToken();
-    const response = await fetch(`http://localhost:5000/api/file/delete/${fileId}`, {
+    const response = await fetch(`${API_BASE_URL}/file/delete/${fileId}`, {
       method: "DELETE",
       headers: {
         ...(csrfToken && { "X-CSRF-Token": csrfToken }),
@@ -80,13 +84,13 @@ export const deleteFile = async (fileId: string) => {
     console.error("Error deleting file:", error);
     return { success: false, message: "Error deleting file" };
   }
-}
+};
 
 // Get list of available files from the server database
 export const getFiles = async () => {
   try {
     const csrfToken = await getCSRFAccessToken();
-    const response = await fetch("http://localhost:5000/api/file/list", {
+    const response = await fetch(`${API_BASE_URL}/file/list`, {
       method: "GET",
       headers: {
         ...(csrfToken && { "X-CSRF-Token": csrfToken }),
@@ -102,4 +106,4 @@ export const getFiles = async () => {
     console.error("Error fetching files:", error);
     return [];
   }
-}
+};

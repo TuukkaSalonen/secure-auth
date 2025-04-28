@@ -64,6 +64,7 @@ limiter = Limiter(
     default_limits=["1000 per day", "200 per hour"],
 )
 
+# Start the session cleanup scheduler
 session_cleanup.scheduler.start()
 
 from . import routes, models

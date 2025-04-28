@@ -1,5 +1,6 @@
-import { LOGIN, LOGOUT, SET_USER, SET_MFA } from "./constants";
+import { LOGIN, LOGOUT, SET_USER, SET_MFA } from "../constants";
 
+// Auth state interface for authenticaton state management
 export type AuthState = {
   isAuthenticated: boolean;
   user?: string | null;
@@ -7,6 +8,7 @@ export type AuthState = {
   loading?: boolean;
 };
 
+// Initial state for authentication
 const initialState: AuthState = {
   isAuthenticated: false,
   user: null,
@@ -14,11 +16,13 @@ const initialState: AuthState = {
   loading: true,
 };
 
+// Auth action for reducer
 interface AuthAction {
   type: string;
   payload?: string | boolean | null;
 }
 
+// Auth reducer for managing authentication state
 const authReducer = (state = initialState, action: AuthAction): AuthState => {
   switch (action.type) {
     case LOGIN:

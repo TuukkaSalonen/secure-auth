@@ -4,6 +4,7 @@ import { uploadFile, downloadFile, getFiles, deleteFile } from "../api/files";
 import { Link } from "react-router-dom";
 import styles from "./styles/Files.module.css";
 
+// File item interface for file list
 interface FileItem {
   id: string;
   filename: string;
@@ -11,18 +12,22 @@ interface FileItem {
   uploaded_at: string;
 }
 
+// Files component for file upload, download, and delete functionality
 const Files: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [fileList, setFileList] = useState<FileItem[]>([]);
 
+  // Fetch files on component mount
   useEffect(() => {
     fetchFiles();
   }, []);
 
+  // Fetch files from the server
   const fetchFiles = async () => {
     setFileList(await getFiles());
   };
 
+  // Handle file drop and validation with a size limit of 100MB
   const onDrop = (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
@@ -33,6 +38,7 @@ const Files: React.FC = () => {
     setFile(acceptedFiles[0]);
   };
 
+  // Set up dropzone for file upload with accepted file types
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "image/jpeg": [".jpg", ".jpeg"],
@@ -72,10 +78,12 @@ const Files: React.FC = () => {
     onDrop,
   });
 
+  // Handle file download file by ID
   const handleDownload = async (fileId: string) => {
     await downloadFile(fileId);
   };
 
+  // Handle file deletion by ID
   const handleDelete = async (fileId: string) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this file?"
@@ -90,6 +98,7 @@ const Files: React.FC = () => {
     }
   };
 
+  // Handle file upload on form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!file) {
@@ -101,6 +110,8 @@ const Files: React.FC = () => {
     formData.append("file", file);
 
     const response = await uploadFile(formData);
+
+    // Check if the file upload was successful
     if (response.success) {
       setFile(null);
       fetchFiles();
@@ -116,7 +127,7 @@ const Files: React.FC = () => {
         <div {...getRootProps()} className={styles.dropzone}>
           <input {...getInputProps()} />
           {!file ? (
-          <p>Drag & drop a file here, or click to select one</p>
+            <p>Drag & drop a file here, or click to select one</p>
           ) : (
             <p>Upload or clear the file using the buttons below.</p>
           )}
@@ -147,7 +158,9 @@ const Files: React.FC = () => {
           <li key={file.id} className={styles.fileItem}>
             <span>{file.filename}</span>
             <span>({file.file_size} bytes)</span>
-            <span>Uploaded at: {new Date(file.uploaded_at).toLocaleDateString()}</span>
+            <span>
+              Uploaded at: {new Date(file.uploaded_at).toLocaleDateString()}
+            </span>
             <div>
               <button
                 className={styles.btn}

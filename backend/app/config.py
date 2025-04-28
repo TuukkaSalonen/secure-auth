@@ -4,6 +4,7 @@ from datetime import timedelta
 
 load_dotenv()
 
+# Set the environment variables for the application
 class Config:
     FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
     SECRET_KEY = os.getenv('SECRET_KEY', 'secret-key')

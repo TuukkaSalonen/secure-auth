@@ -7,6 +7,7 @@ import { logOut } from "../api/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
+// Home component for the application
 const Home: React.FC = () => {
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
@@ -16,12 +17,14 @@ const Home: React.FC = () => {
 
   const dispatch = useDispatch();
 
+  // Handle user logout
   const handleLogOut = async () => {
     await logOut(dispatch);
   };
 
   return (
     <div className={styles.homeContainer}>
+      {/* Display loading spinner while checking authentication status */}
       {loading ? (
         <>
           <h2>Welcome to the Secure Programming Application</h2>
@@ -32,6 +35,7 @@ const Home: React.FC = () => {
       ) : (
         <>
           <h2>Welcome to the Secure Programming Application</h2>
+          {/* Display buttons to files and mfa setup for logged in users */}
           {isAuthenticated ? (
             <>
               <p>Hello, {username}</p>
@@ -48,6 +52,7 @@ const Home: React.FC = () => {
             </>
           ) : (
             <>
+              {/* Display login and register buttons for unauthenticated users */}
               <p>Log in or register to continue.</p>
               <div className={styles.buttonContainer}>
                 <Link to="/login">

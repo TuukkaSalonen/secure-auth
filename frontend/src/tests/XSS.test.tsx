@@ -8,7 +8,7 @@ import '@testing-library/jest-dom'
 
 // Test cases for username rendering using name that includes different HTML tags
 
-// Alert test - ensure alert is not executed
+// Test that alert is not executed
 test("renders username safely", () => {
   const store = configureStore({
     reducer: {
@@ -31,14 +31,14 @@ test("renders username safely", () => {
     </Provider>
   );
 
-  // Expect alert to not be executed
+  // Check that the alert is not executed
   expect(screen.queryByText('alert("XSS")')).not.toBeInTheDocument();
   expect(
     screen.getByText('Hello, <script>alert("XSS")</script>')
   ).toBeInTheDocument();
 });
 
-// Bold test - ensure bold is not rendered as HTML
+// Test that bold is not rendered as HTML
 test("renders HTML tags in username as plain text", () => {
   const store = configureStore({
     reducer: { auth: authReducer },
@@ -59,11 +59,11 @@ test("renders HTML tags in username as plain text", () => {
     </Provider>
   );
 
-  // Expect to be rendered as a literal string, not bold
+  // Check that it is rendered as string, not bold
   expect(screen.getByText("Hello, <b>BoldUser</b>")).toBeInTheDocument();
 });
 
-// Svg test - ensure SVG is not executed on load
+// Test that SVG is not executed on load
 test("does not execute SVG onload XSS", () => {
   const store = configureStore({
     reducer: { auth: authReducer },
@@ -84,14 +84,14 @@ test("does not execute SVG onload XSS", () => {
     </Provider>
   );
 
-  // Expect alert to not be executed
+  // Check that alert is not executed
   expect(screen.queryByText('alert("XSS")')).not.toBeInTheDocument();
   expect(
     screen.getByText('Hello, <svg onload=alert("XSS")></svg>')
   ).toBeInTheDocument();
 });
 
-// Image test - ensure image onerror is not executed
+// Test that image onerror is not executed
 test("does not execute image onerror XSS", () => {
   const store = configureStore({
     reducer: { auth: authReducer },
@@ -112,7 +112,7 @@ test("does not execute image onerror XSS", () => {
     </Provider>
   );
 
-  // Expect alert to not be executed
+  // Check that alert to not executed
   expect(screen.queryByText("alert(1)")).not.toBeInTheDocument();
   expect(
     screen.getByText("Hello, <img src=x onerror=alert(1)>")

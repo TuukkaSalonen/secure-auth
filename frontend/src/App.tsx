@@ -1,4 +1,3 @@
-// src/App.tsx
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from "./components/Login";
@@ -14,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { Authenticator } from "./components/Authenticator";
 import UnauthenticatedRoute from "./components/UnauthenticatedRoute";
 
+// Main App component
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const auth = useSelector((state: RootState) => state.auth);
@@ -51,6 +51,7 @@ const App: React.FC = () => {
       <div className="app-container">
         <Routes>
           <Route path="/" element={<Home />} />
+          {/* Protect /files route from unauthenticated access */}
           <Route
             path="/files"
             element={
@@ -59,6 +60,7 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          {/* Protect /mfa route from unauthenticated access */}
           <Route
             path="/mfa"
             element={
@@ -67,6 +69,7 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          {/* Limit /login route from authenticated users */}
           <Route
             path="/login"
             element={
@@ -75,6 +78,7 @@ const App: React.FC = () => {
               </UnauthenticatedRoute>
             }
           />
+          {/* Limit /register route from authenticated users */}
           <Route
             path="/register"
             element={

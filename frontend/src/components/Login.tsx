@@ -8,6 +8,7 @@ import { validateLoginInput } from "../validators";
 import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+// Login component for user authentication
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +18,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // Check if MFA is required on component mount (from OAuth redirect when MFA is enabled)
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.has("mfa_required")) {
@@ -25,18 +27,24 @@ const Login: React.FC = () => {
     }
   }, [navigate]);
 
+  // Handle form submission for login
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Validate input fields
     const validateInput = await validateLoginInput(username, password);
     if (validateInput.success === false) {
       setErrorMessage(validateInput.message);
       return;
     }
     setErrorMessage("");
+
+    // Attempt to log in the user
     const loginResponse = await postLogin(username, password, dispatch);
     if (loginResponse && loginResponse.success) {
-      navigate("/");
+      handleHome();
     } else {
+      // If MFA is required, set the state to show the MFA input field
       if (loginResponse.mfaRequired) {
         setMfaRequired(true);
         return;
@@ -45,17 +53,23 @@ const Login: React.FC = () => {
     }
   };
 
+  // Handle form submission for MFA code verification
   const handleSubmitMFA = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Send the MFA code to the server for verification
     const loginResponse = await verifyLoginMFA(totp, dispatch);
+
+    // Navigate to the home page if successful, otherwise show error message
     if (loginResponse && loginResponse.success) {
       navigate("/");
     } else {
       setErrorMessage(loginResponse.message);
-      setMfaRequired(false)
+      setMfaRequired(false);
     }
   };
 
+  // Handle cancel button click to reset state
   const handleCancel = async () => {
     setPassword("");
     setTotp("");
@@ -64,10 +78,12 @@ const Login: React.FC = () => {
     setMfaRequired(false);
   };
 
+  // Handle navigation to home page
   const handleHome = async () => {
     navigate("/");
   };
 
+  // Handle login with third-party providers (Google, GitHub) and redirect to OAuth flow
   const handleProviderLogin = async (provider: string) => {
     ProviderLogin(provider);
   };
@@ -78,6 +94,7 @@ const Login: React.FC = () => {
       {errorMessage && (
         <p className={styles["error-message"]}>{errorMessage}</p>
       )}
+      {/* MFA required condition to display code field */}
       {mfaRequired ? (
         <div>
           <p>

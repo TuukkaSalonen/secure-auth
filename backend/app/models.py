@@ -18,24 +18,30 @@ class User(db.Model):
     sso_provider = db.Column(db.String(50), nullable=True)
     encrypted_user_key = db.Column(db.LargeBinary, nullable=True)
     iv = db.Column(db.LargeBinary, nullable=True)
- 
+    
+    # Create password hash and user key on registration
     def __init__(self, username, password=None, sso_provider=None):
         self.username = username
         if password:
-            self.password_hash = generate_password_hash(password) 
+            self.password_hash = generate_password_hash(password)
+        # If SSO provider is provided, set it
         if sso_provider:
             self.sso_provider = sso_provider
         self.encrypted_user_key, self.iv = generate_user_key() # Generate a random user key and encrypt it on register
 
+    # Check user password hash
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
+    # Set MFA secret and encrypt it
     def set_mfa_secret(self, secret):
         self.mfa_secret_hash = encrypt_secret_MFA(secret)
 
+    # Get MFA secret after decrypting it
     def get_mfa_secret(self):
         return decrypt_secret_MFA(self.mfa_secret_hash)
     
+    # Decrypt user key using the stored IV
     def decrypt_user_key(self):
         return decrypt_user_key(self.encrypted_user_key, self.iv)
 
@@ -65,9 +71,11 @@ class UploadedFile(db.Model):
     mimetype = db.Column(db.String(100), nullable=False)
     file_size = db.Column(db.Integer, nullable=False)
 
+    # Encrypted data and key
     encrypted_data = db.Column(db.LargeBinary, nullable=False)
     encrypted_key = db.Column(db.LargeBinary, nullable=False)
 
+    # IV for the file and key
     iv_file = db.Column(db.LargeBinary, nullable=False)
     iv_key = db.Column(db.LargeBinary, nullable=False)
 

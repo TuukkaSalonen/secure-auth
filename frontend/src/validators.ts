@@ -1,9 +1,11 @@
 import * as yup from "yup";
 
+// Regex patterns for username, email, and password validation
 const usernameRegex = /^[a-zA-Z0-9_]{3,32}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d]{8,64}$/;
 
+// Login schema for validation
 const loginSchema = yup.object().shape({
   username: yup
     .string()
@@ -23,6 +25,7 @@ const loginSchema = yup.object().shape({
     .required("Password is required."),
 });
 
+// Register schema for validation
 const registerSchema = yup.object().shape({
   username: yup
     .string()

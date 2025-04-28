@@ -4,6 +4,7 @@ import styles from "./styles/Register.module.css";
 import { postRegister } from "../api/auth";
 import { validateRegisterInput } from "../validators";
 
+// Register component for user registration
 const Register: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -11,9 +12,16 @@ const Register: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
+  // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const validateInput = await validateRegisterInput(username, password, confirmPassword);
+
+    // Validate input fields
+    const validateInput = await validateRegisterInput(
+      username,
+      password,
+      confirmPassword
+    );
     if (validateInput.success === false) {
       setErrorMessage(validateInput.message);
       return;
@@ -23,6 +31,8 @@ const Register: React.FC = () => {
       return;
     }
     const registerSuccess = await postRegister(username, password);
+
+    // Check if registration was successful and navigate to login page
     if (registerSuccess && registerSuccess.success) {
       navigate("/login");
     } else {
@@ -30,6 +40,7 @@ const Register: React.FC = () => {
     }
   };
 
+  // Navigate to home page
   const handleHome = async () => {
     navigate("/");
   };
@@ -71,7 +82,9 @@ const Register: React.FC = () => {
         <button type="submit">Register</button>
       </form>
       <button onClick={handleHome}>Cancel</button>
-      <Link to="/login">Login with existing account, Google or GitHub here</Link>
+      <Link to="/login">
+        Login with existing account, Google or GitHub here
+      </Link>
     </div>
   );
 };

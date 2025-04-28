@@ -6,7 +6,8 @@ export const fetchWrapper = async (
   const response = await fetch(url, options);
 
   if (response.status === 429) {
-    const message = "Too many requests for this action. Please try again later.";
+    const message =
+      "Too many requests for this action. Please try again later.";
     alert(message);
     throw new Error(message);
   }

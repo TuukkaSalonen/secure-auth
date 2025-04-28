@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { ProtectedRouteProps } from "./ProtectedRoute";
 
+// UnauthenticatedRoute component to prevent access from authenticated users
 const UnauthenticatedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const auth = useSelector((state: RootState) => state.auth);
   const loading = useSelector((state: RootState) => state.auth.loading);
@@ -17,10 +18,12 @@ const UnauthenticatedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       </div>
     );
   }
+
+  // If the user is authenticated, redirect to the home page
   if (auth.isAuthenticated) {
     return <Navigate to="/" replace />;
   }
-  
+
   return children;
 };
 

@@ -5,10 +5,12 @@ import { RootState } from "../redux/store";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
+// Interface for the ProtectedRoute component props
 export interface ProtectedRouteProps {
   children: JSX.Element;
 }
 
+// ProtectedRoute component to prevent access from unauthenticated users
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const auth = useSelector((state: RootState) => state.auth);
   const loading = useSelector((state: RootState) => state.auth.loading);
@@ -20,6 +22,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       </div>
     );
   }
+
+  // If the user is not authenticated, redirect to the home page
   if (!auth.isAuthenticated) {
     return <Navigate to="/" replace />;
   }
