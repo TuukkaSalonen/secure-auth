@@ -10,6 +10,8 @@ from .config import csp
 from .db import db
 from . import session_cleanup
 from authlib.integrations.flask_client import OAuth
+import logging
+from logging.handlers import RotatingFileHandler
 
 # Initialize the app
 app = Flask(__name__)
@@ -25,6 +27,17 @@ jwt = JWTManager(app)
 
 # Initialize OAuth
 oauth = OAuth(app)
+
+# Configure logging
+logger = logging.getLogger('secure_app')
+logger.setLevel(logging.INFO)
+
+rotating_handler = RotatingFileHandler(app.config['LOG_FILE'], maxBytes=10000, backupCount=5, encoding='utf-8')
+rotating_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+
+if not logger.handlers:
+    logger.addHandler(rotating_handler)
+logger.propagate = False
 
 # Register OAuth providers
 oauth.register(

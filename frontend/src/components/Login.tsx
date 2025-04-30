@@ -65,7 +65,10 @@ const Login: React.FC = () => {
       navigate("/");
     } else {
       setErrorMessage(loginResponse.message);
-      setMfaRequired(false);
+      // If the MFA has expired, reset the state
+      if (loginResponse && loginResponse.expired) {
+        setMfaRequired(false);
+      }
     }
   };
 

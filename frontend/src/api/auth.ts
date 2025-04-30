@@ -179,6 +179,7 @@ export const verifyLoginMFA = async (
       return {
         success: false,
         message: "Authentication process expired. Please login again.",
+        expired: true,
       };
     }
     // If MFA verification fails, return error message

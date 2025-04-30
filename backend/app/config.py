@@ -31,6 +31,7 @@ class Config:
     MASTER_KEY = os.getenv('MASTER_KEY')
     PREFERRED_URL_SCHEME = os.getenv('PREFERRED_URL_SCHEME', 'http')
     SERVER_NAME = os.getenv('SERVER_NAME', 'localhost:5000')
+    LOG_FILE = os.getenv('LOG_FILE')
 
 # Content Security Policy
 csp = {
