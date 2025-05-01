@@ -395,7 +395,7 @@ def verify_mfa_setup():
         return response, 200
     
     log_security_event("MFA_SETUP_VERIFY", "INVALID_TOTP_CODE", current_user, "Invalid TOTP code")
-    return jsonify(message="Invalid TOTP code"), 401
+    return jsonify(message="Invalid MFA code"), 401
 
 # Remove MFA from this user
 @app.route('/api/mfa/disable', methods=['POST'])

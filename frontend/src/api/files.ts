@@ -16,10 +16,14 @@ export const uploadFile = async (formData: FormData) => {
       },
       credentials: "include",
     });
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
     const data = await response.json();
+    if (!response.ok) {
+      if (data.message) {
+        return { success: false, message: data.message };
+      } else {
+        throw new Error("Network response was not ok");
+      }
+    }
     return { success: true, message: data.message };
   } catch (error) {
     console.error("Error uploading files:", error);

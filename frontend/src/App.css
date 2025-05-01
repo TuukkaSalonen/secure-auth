@@ -4,3 +4,21 @@
   padding: 2rem;
   text-align: center;
 }
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #007bff;
+}
+
+h2 {
+  font-size: 2.2rem;
+  margin-bottom: 24px;
+  color: #007bff;
+}
+
+p {
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+  color: #444;
+}

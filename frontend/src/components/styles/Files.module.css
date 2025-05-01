@@ -1,101 +1,125 @@
+/* Files.module.css */
+
 .filesContainer {
   display: flex;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 2rem;
   text-align: center;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .fileList {
   list-style: none;
   padding: 0;
   width: 100%;
-  max-width: 600px;
+  margin-top: 1rem;
 }
 
 .fileItem {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 5px;
+  align-items: flex-start;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
   margin-bottom: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fileItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .fileItem span {
   margin: 0.2rem 0;
   color: #333;
+  font-size: 0.95rem;
 }
 
 .dropzone {
-  border: 2px dashed #cccccc;
-  border-color: black;
-  padding: 20px;
-  text-align: center;
+  border: 2px dashed #888;
+  padding: 1.5rem;
+  background-color: rgba(240, 240, 240, 0.6);
+  border-radius: 16px;
   cursor: pointer;
-  margin-top: 1rem;
-  background-color: rgba(216, 216, 216, 0.8);
-  border-radius: 12px;
-  transition: border-color 0.3s;
-  backdrop-filter: blur(5px);
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+  backdrop-filter: blur(6px);
+  margin-bottom: 1rem;
 }
 
 .dropzone:hover {
-  border-color: #007bff;
+  border-color: #0056b3;
+  background-color: rgba(240, 240, 240, 0.8);
 }
 
 .selectedFile {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #333;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: #444;
 }
 
 .btn {
   background-color: #007bff;
   color: white;
-  padding: 0.6rem 1.2rem;
-  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  margin: 0.5rem 0.3rem 0 0;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s ease-in-out;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease-in-out, transform 0.2s ease;
 }
 
 .btn:hover {
   background-color: #0056b3;
+  transform: scale(1.03);
 }
 
 .btnDelete {
-  background-color: red;
-  color: white;
-  margin-left: 0.5rem;
+  background-color: #e53935;
 }
 
 .btnDelete:hover {
-  background-color: darkred;
+  background-color: #b71c1c;
 }
 
 .link {
-  margin-top: 1.5rem;
-  display: inline-block;
+  margin-top: 10px;
   text-decoration: none;
   color: #007bff;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: color 0.2s ease;
 }
 
 .link:hover {
   text-decoration: underline;
-}
-
-div {
-  margin-bottom: 0px;
+  color: #0056b3;
 }
 
 .fileActions {
   display: flex;
-  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.spinnerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.spinner {
+  font-size: 2rem;
+  color: #333;
 }

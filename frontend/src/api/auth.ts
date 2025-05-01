@@ -208,6 +208,10 @@ export const setupMFA = async () => {
       const url = URL.createObjectURL(image);
       return { success: true, url };
     }
+    const data = await response.json();
+    if (data.message) {
+      return { success: false, message: data.message };
+    }
     return { success: false, message: "MFA setup failed" };
   } catch (error) {
     console.error("MFA setup failed:", error);

@@ -1,5 +1,10 @@
+/* Authenticator.module.css */
+
 .AuthenticatorContainer {
     display: flex;
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -7,8 +12,16 @@
     text-align: center;
   }
   
-  .loadingContainer {
-    margin-top: 1rem;
+  .spinnerContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+  
+  .spinner {
+    font-size: 2rem;
+    color: #333;
   }
 
   .qrCodeContainer {
@@ -57,4 +70,11 @@
   
 .link {
     margin-top: 10px;
+}
+
+.error-message {
+  color: #ff0000;
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 10px;
 }

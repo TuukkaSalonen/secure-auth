@@ -3,6 +3,12 @@ import { useDropzone } from "react-dropzone";
 import { uploadFile, downloadFile, getFiles, deleteFile } from "../api/files";
 import { Link } from "react-router-dom";
 import styles from "./styles/Files.module.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 // File item interface for file list
 interface FileItem {
@@ -16,6 +22,7 @@ interface FileItem {
 const Files: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [fileList, setFileList] = useState<FileItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // Fetch files on component mount
   useEffect(() => {
@@ -24,7 +31,15 @@ const Files: React.FC = () => {
 
   // Fetch files from the server
   const fetchFiles = async () => {
-    setFileList(await getFiles());
+    setLoading(true);
+    try {
+      const files = await getFiles();
+      setFileList(files);
+    } catch {
+      toast.error("Failed to fetch files");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle file drop and validation with a size limit of 100MB
@@ -32,7 +47,7 @@ const Files: React.FC = () => {
     const file = acceptedFiles[0];
     if (!file) return;
     if (file.size > 100 * 1024 * 1024) {
-      alert("File size exceeds 100MB limit.");
+      toast.error("File size exceeds 100MB limit.");
       return;
     }
     setFile(acceptedFiles[0]);
@@ -84,25 +99,35 @@ const Files: React.FC = () => {
   };
 
   // Handle file deletion by ID
-  const handleDelete = async (fileId: string) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this file?"
-    );
-    if (confirmDelete) {
-      const response = await deleteFile(fileId);
-      if (response.success) {
-        fetchFiles();
-      } else {
-        alert("Failed to delete file.");
-      }
-    }
+  const handleDelete = (fileId: string) => {
+    confirmAlert({
+      title: "Confirm Deletion",
+      message: "Are you sure you want to delete this file?",
+      buttons: [
+        {
+          label: "Yes",
+          onClick: async () => {
+            const response = await deleteFile(fileId);
+            if (response.success) {
+              toast.success("File deleted");
+              fetchFiles();
+            } else {
+              toast.error("Failed to delete file");
+            }
+          },
+        },
+        {
+          label: "No",
+        },
+      ],
+    });
   };
 
   // Handle file upload on form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!file) {
-      alert("Please select a file first!");
+      toast.error("Please select a file to upload.");
       return;
     }
 
@@ -113,11 +138,26 @@ const Files: React.FC = () => {
 
     // Check if the file upload was successful
     if (response.success) {
+      toast.success("File uploaded successfully!");
       setFile(null);
       fetchFiles();
     } else {
-      alert("File upload failed!");
+      if (response.message) {
+        toast.error(response.message);
+      } else {
+        toast.error("Failed to upload file. Please try again.");
+      }
     }
+  };
+
+  // Format file size for display, found this function in StackOverflow
+  const formatFileSize = (size: number) => {
+    const i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
+    return (
+      +(size / Math.pow(1024, i)).toFixed(2) * 1 +
+      " " +
+      ["B", "kB", "MB", "GB", "TB"][i]
+    );
   };
 
   return (
@@ -152,32 +192,49 @@ const Files: React.FC = () => {
           </div>
         )}
       </form>
-      {fileList.length === 0 && <p>No files uploaded yet.</p>}
-      <ul className={styles.fileList}>
-        {fileList.map((file: FileItem) => (
-          <li key={file.id} className={styles.fileItem}>
-            <span>{file.filename}</span>
-            <span>({file.file_size} bytes)</span>
-            <span>
-              Uploaded at: {new Date(file.uploaded_at).toLocaleDateString()}
-            </span>
-            <div>
-              <button
-                className={styles.btn}
-                onClick={() => handleDownload(file.id)}
-              >
-                Download
-              </button>
-              <button
-                className={`${styles.btn} ${styles.btnDelete}`}
-                onClick={() => handleDelete(file.id)}
-              >
-                Delete
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+
+      <h2>Uploaded Files</h2>
+      {loading ? (
+        <div className={styles.spinnerContainer}>
+          <FontAwesomeIcon icon={faSpinner} spin className={styles.spinner} />
+        </div>
+      ) : (
+        <>
+          {fileList.length > 0 ? (
+            <>
+              <p>Total files: {fileList.length}</p>
+              <ul className={styles.fileList}>
+                {fileList.map((file: FileItem) => (
+                  <li key={file.id} className={styles.fileItem}>
+                    <span>{file.filename}</span>
+                    <span>({formatFileSize(file.file_size)})</span>
+                    <span>
+                      Uploaded at:{" "}
+                      {new Date(file.uploaded_at).toLocaleDateString()}
+                    </span>
+                    <div>
+                      <button
+                        className={styles.btn}
+                        onClick={() => handleDownload(file.id)}
+                      >
+                        Download
+                      </button>
+                      <button
+                        className={`${styles.btn} ${styles.btnDelete}`}
+                        onClick={() => handleDelete(file.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p>No files uploaded yet.</p>
+          )}
+        </>
+      )}
       <Link to="/" className={styles.link}>
         Back to Home
       </Link>

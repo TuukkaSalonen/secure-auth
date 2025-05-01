@@ -32,7 +32,7 @@ oauth = OAuth(app)
 logger = logging.getLogger('secure_app')
 logger.setLevel(logging.INFO)
 
-rotating_handler = RotatingFileHandler(app.config['LOG_FILE'], maxBytes=10000, backupCount=5, encoding='utf-8')
+rotating_handler = RotatingFileHandler(app.config['LOG_FILE'], maxBytes=100000, backupCount=5, encoding='utf-8', delay=True)
 rotating_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
 
 if not logger.handlers:

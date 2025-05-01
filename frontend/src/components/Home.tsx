@@ -39,21 +39,23 @@ const Home: React.FC = () => {
           {isAuthenticated ? (
             <>
               <p>Hello, {username}</p>
-              <Link to="/mfa">
-                <button className={styles.homeLink}>MFA setup</button>
-              </Link>
-
               <Link to="/files">
                 <button className={styles.homeLink}>Files</button>
               </Link>
-              <button onClick={handleLogOut} className={styles.homeBtn}>
+              <Link to="/mfa">
+                <button className={styles.homeLink}>MFA setup</button>
+              </Link>
+              <button
+                onClick={handleLogOut}
+                className={`${styles.homeBtn} ${styles.logoutBtn}`}
+              >
                 Logout
               </button>
             </>
           ) : (
             <>
               {/* Display login and register buttons for unauthenticated users */}
-              <p>Log in or register to continue.</p>
+              <p>Login or register to continue</p>
               <div className={styles.buttonContainer}>
                 <Link to="/login">
                   <button className={styles.homeLink}>Login</button>

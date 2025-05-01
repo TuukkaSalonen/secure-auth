@@ -7,13 +7,14 @@ import { useDispatch } from "react-redux";
 import { validateLoginInput } from "../validators";
 import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Login component for user authentication
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [totp, setTotp] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [mfaRequired, setMfaRequired] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -34,14 +35,14 @@ const Login: React.FC = () => {
     // Validate input fields
     const validateInput = await validateLoginInput(username, password);
     if (validateInput.success === false) {
-      setErrorMessage(validateInput.message);
+      toast.error(validateInput.message);
       return;
     }
-    setErrorMessage("");
 
     // Attempt to log in the user
     const loginResponse = await postLogin(username, password, dispatch);
     if (loginResponse && loginResponse.success) {
+      toast.success("Login successful!");
       handleHome();
     } else {
       // If MFA is required, set the state to show the MFA input field
@@ -49,7 +50,7 @@ const Login: React.FC = () => {
         setMfaRequired(true);
         return;
       }
-      setErrorMessage(loginResponse.message);
+      toast.error(loginResponse.message);
     }
   };
 
@@ -62,9 +63,10 @@ const Login: React.FC = () => {
 
     // Navigate to the home page if successful, otherwise show error message
     if (loginResponse && loginResponse.success) {
+      toast.success("MFA verification successful!");
       navigate("/");
     } else {
-      setErrorMessage(loginResponse.message);
+      toast.error(loginResponse.message);
       // If the MFA has expired, reset the state
       if (loginResponse && loginResponse.expired) {
         setMfaRequired(false);
@@ -77,7 +79,6 @@ const Login: React.FC = () => {
     setPassword("");
     setTotp("");
     setUsername("");
-    setErrorMessage("");
     setMfaRequired(false);
   };
 
@@ -94,9 +95,6 @@ const Login: React.FC = () => {
   return (
     <div className={styles["login-container"]}>
       <h2 className={styles["h2"]}>Login</h2>
-      {errorMessage && (
-        <p className={styles["error-message"]}>{errorMessage}</p>
-      )}
       {/* MFA required condition to display code field */}
       {mfaRequired ? (
         <div>

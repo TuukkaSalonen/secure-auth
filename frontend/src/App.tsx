@@ -12,6 +12,7 @@ import Files from "./components/Files";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Authenticator } from "./components/Authenticator";
 import UnauthenticatedRoute from "./components/UnauthenticatedRoute";
+import { ToastContainer } from "react-toastify";
 
 // Main App component
 const App: React.FC = () => {
@@ -49,6 +50,12 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="app-container">
+        {/* Toast container for notifications */}
+        <ToastContainer
+          position="top-right"
+          autoClose={4000}
+          hideProgressBar={true}
+        />
         <Routes>
           <Route path="/" element={<Home />} />
           {/* Protect /files route from unauthenticated access */}

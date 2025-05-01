@@ -3,13 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import styles from "./styles/Register.module.css";
 import { postRegister } from "../api/auth";
 import { validateRegisterInput } from "../validators";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Register component for user registration
 const Register: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   // Handle form submission
@@ -23,20 +24,21 @@ const Register: React.FC = () => {
       confirmPassword
     );
     if (validateInput.success === false) {
-      setErrorMessage(validateInput.message);
+      toast.error(validateInput.message);
       return;
     }
     if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
     const registerSuccess = await postRegister(username, password);
 
     // Check if registration was successful and navigate to login page
     if (registerSuccess && registerSuccess.success) {
+      toast.success("Registration successful! Please log in.");
       navigate("/login");
     } else {
-      setErrorMessage(registerSuccess.message);
+      toast.error(registerSuccess.message);
     }
   };
 
@@ -48,9 +50,6 @@ const Register: React.FC = () => {
   return (
     <div className={styles["register-container"]}>
       <h2>Register</h2>
-      {errorMessage && (
-        <p className={styles["error-message"]}>{errorMessage}</p>
-      )}
       <form onSubmit={handleSubmit}>
         <div className={styles["form-group"]}>
           <label>Username/Email:</label>
@@ -82,9 +81,7 @@ const Register: React.FC = () => {
         <button type="submit">Register</button>
       </form>
       <button onClick={handleHome}>Cancel</button>
-      <Link to="/login">
-        Login with existing account, Google or GitHub here
-      </Link>
+      <Link to="/login">Login with existing account, Google or GitHub</Link>
     </div>
   );
 };
