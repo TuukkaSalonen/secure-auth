@@ -1,3 +1,4 @@
+import os
 import re
 from password_validator import PasswordValidator
 import uuid
@@ -56,3 +57,55 @@ def check_file_id(file_id):
         return str(file_uuid) == file_id
     except ValueError:
         return False
+
+# Function to validate the file type
+def validate_file_type(file):
+    mimetype = file.mimetype
+    extension = os.path.splitext(file.filename)[1].lower()
+
+    allowed_exts = ALLOWED_FILE_TYPES.get(mimetype)
+    return allowed_exts and extension in allowed_exts
+
+# Allowed file types and their corresponding MIME types, same as in the frontend
+ALLOWED_FILE_TYPES = {
+    "image/jpeg": [".jpg", ".jpeg"],
+    "image/png": [".png"],
+    "image/gif": [".gif"],
+    "image/svg+xml": [".svg"],
+    "image/webp": [".webp"],
+    "image/bmp": [".bmp"],
+    "image/tiff": [".tif", ".tiff"],
+    "audio/mpeg": [".mp3"],
+    "audio/wav": [".wav"],
+    "audio/ogg": [".ogg"],
+    "audio/mp4": [".m4a"],
+    "audio/flac": [".flac"],
+    "audio/aac": [".aac"],
+    "video/mp4": [".mp4"],
+    "video/mpeg": [".mpeg"],
+    "video/ogg": [".ogv"],
+    "video/webm": [".webm"],
+    "video/quicktime": [".mov"],
+    "video/x-msvideo": [".avi"],
+    "video/x-matroska": [".mkv"],
+    "application/pdf": [".pdf"],
+    "application/msword": [".doc", ".docx"],
+    "application/vnd.ms-excel": [".xls", ".xlsx"],
+    "application/vnd.ms-powerpoint": [".ppt", ".pptx"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
+    "text/plain": [".txt", ".py", ".js", ".html", ".css", ".ts", ".c", ".cpp", ".java", ".jsx", ".tsx", ".json", ".md", ".xml", ".csv", ".yaml", ".yml", ".sql", ".hs", ".sh", ".bat", ".ini", ".log"],
+    "application/zip": [".zip", ".tar", ".gz", ".7z", ".rar"],
+    "application/x-tar": [".tar"],
+    "application/gzip": [".gz"],
+    "application/json": [".json"],
+    "application/xml": [".xml"],
+    "application/x-yaml": [".yaml", ".yml"],
+    "application/octet-stream": [".bin", ".exe", ".iso"],
+    "application/x-msdownload": [".exe", ".msi"],
+    "application/x-shockwave-flash": [".swf"],
+    "application/x-bzip": [".bz2"],
+    "application/x-bzip2": [".bz2"],
+    "application/x-rar-compressed": [".rar"],
+}

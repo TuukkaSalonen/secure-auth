@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { uploadFile, downloadFile, getFiles, deleteFile } from "../api/files";
+import {
+  uploadFile,
+  downloadFile,
+  getFiles,
+  deleteFile,
+  deleteAllFiles,
+} from "../api/files";
 import { Link } from "react-router-dom";
 import styles from "./styles/Files.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,6 +15,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
+import { acceptedFileTypes } from "../constants";
 
 // File item interface for file list
 interface FileItem {
@@ -55,41 +62,7 @@ const Files: React.FC = () => {
 
   // Set up dropzone for file upload with accepted file types
   const { getRootProps, getInputProps } = useDropzone({
-    accept: {
-      "image/jpeg": [".jpg", ".jpeg"],
-      "image/png": [".png"],
-      "image/gif": [".gif"],
-      "image/svg+xml": [".svg"],
-      "audio/mpeg": [".mp3"],
-      "audio/wav": [".wav"],
-      "audio/ogg": [".ogg"],
-      "audio/mp4": [".m4a"],
-      "video/mp4": [".mp4"],
-      "application/pdf": [".pdf"],
-      "application/msword": [".docx"],
-      "text/plain": [
-        ".txt",
-        ".py",
-        ".js",
-        ".html",
-        ".css",
-        ".ts",
-        ".c",
-        ".cpp",
-        ".java",
-        ".jsx",
-        ".tsx",
-        ".json",
-        ".md",
-        ".xml",
-        ".csv",
-        ".yaml",
-        ".yml",
-        ".sql",
-        ".hs",
-      ],
-      "application/zip": [".zip", ".tar", ".gz"],
-    },
+    accept: acceptedFileTypes,
     onDrop,
   });
 
@@ -112,7 +85,40 @@ const Files: React.FC = () => {
               toast.success("File deleted");
               fetchFiles();
             } else {
-              toast.error("Failed to delete file");
+              if (response.message) {
+                toast.error(response.message);
+              } else {
+                toast.error("Failed to delete file. Please try again.");
+              }
+            }
+          },
+        },
+        {
+          label: "No",
+        },
+      ],
+    });
+  };
+
+  // Handle deletion of all files
+  const handleDeleteAll = () => {
+    confirmAlert({
+      title: "Confirm Deletion",
+      message: "Are you sure you want to delete all files?",
+      buttons: [
+        {
+          label: "Yes",
+          onClick: async () => {
+            const response = await deleteAllFiles();
+            if (response.success) {
+              toast.success("Files deleted");
+              fetchFiles();
+            } else {
+              if (response.message) {
+                toast.error(response.message);
+              } else {
+                toast.error("Failed to delete files. Please try again.");
+              }
             }
           },
         },
@@ -203,6 +209,12 @@ const Files: React.FC = () => {
           {fileList.length > 0 ? (
             <>
               <p>Total files: {fileList.length}</p>
+              <button
+                className={`${styles.btn} ${styles.btnDeleteAll}`}
+                onClick={() => handleDeleteAll()}
+              >
+                Delete All Files
+              </button>
               <ul className={styles.fileList}>
                 {fileList.map((file: FileItem) => (
                   <li key={file.id} className={styles.fileItem}>

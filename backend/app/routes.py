@@ -7,7 +7,7 @@ from . import app
 from .models import User, UserSession, UploadedFile
 import pyotp
 import qrcode
-from .validators import check_login_input, check_mfa_input, check_file_id
+from .validators import check_login_input, check_mfa_input, check_file_id, validate_file_type
 from . import oauth
 from . import limiter
 from . fileUtils import encrypt_file, decrypt_file
@@ -455,6 +455,10 @@ def upload_file():
     if not file:
         return jsonify(message="No file provided"), 400
 
+    if not validate_file_type(file):
+        log_security_event("FILE_UPLOAD", "INVALID_FILE_TYPE", current_user_id, "Invalid file type")
+        return jsonify(message="Invalid file type"), 400
+    
     file_bytes = file.read()
     if not file_bytes:
         return jsonify(message="Empty file"), 400
@@ -533,7 +537,7 @@ def list_files():
         log_security_event("FILE_LIST", "INVALID_USER", current_user_id, "Invalid user in token")
         return jsonify(message="Invalid user"), 401
 
-    uploaded_files = UploadedFile.query.filter_by(user_id=current_user_id).all()
+    uploaded_files = UploadedFile.query.filter_by(user_id=current_user_id).order_by(UploadedFile.uploaded_at.desc()).all()
     files_list = [
         {
             'id': str(file.id),
@@ -571,6 +575,24 @@ def delete_file(file_id):
 
     log_security_event("FILE_DELETE", "SUCCESSFUL_DELETE", current_user, "File deleted successfully", extra_data={'file_id': file_id})
     return jsonify(message="File deleted successfully"), 200
+
+@app.route('/api/file/delete/all', methods=['DELETE'])
+@limiter.limit("30 per minute")
+@jwt_required()
+def delete_all_files():
+    current_user = get_jwt_identity()
+    if not current_user:
+        log_security_event("FILE_DELETE_ALL", "INVALID_USER", current_user, "Invalid user in token")
+        return jsonify(message="Invalid user"), 401
+
+    uploaded_files = UploadedFile.query.filter_by(user_id=current_user).all()
+    for file in uploaded_files:
+        db.session.delete(file)
+    
+    db.session.commit()
+
+    log_security_event("FILE_DELETE_ALL", "SUCCESSFUL_DELETE_ALL", current_user, "All files deleted successfully")
+    return jsonify(message="All files deleted successfully"), 200
 
 # Get the JTI from a refresh token
 def get_jti_from_token(token):

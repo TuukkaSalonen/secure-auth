@@ -23,10 +23,7 @@ The backend tests can be run individually in the backend directory using the com
 The frontend tests can be run individually in the frontend directory using the command `npm test`.
 
 ## TODO:
-Notifications\
-Styling\
 Add try/catch\
 Check OWASP Top 10\
-File type checks backend, file scans?, file name sanitize werkzeug?\
 Better comments explaining security solution reasons\
 Argumenting security quality in report
