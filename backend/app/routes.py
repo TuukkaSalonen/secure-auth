@@ -4,7 +4,6 @@ from flask import make_response, jsonify, send_file, redirect, request
 import io
 from flask_jwt_extended import get_csrf_token, decode_token, get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
 import traceback
-
 from flask_limiter import RateLimitExceeded
 from . import db
 from . import app 
@@ -617,6 +616,7 @@ def delete_file(file_id):
     log_security_event("FILE_DELETE", "SUCCESSFUL_DELETE", current_user, "File deleted successfully", extra_data={'file_id': file_id})
     return jsonify(message="File deleted successfully"), 200
 
+# Delete all files uploaded by the user
 @app.route('/api/file/delete/all', methods=['DELETE'])
 @limiter.limit("30 per minute")
 @jwt_required()
@@ -635,6 +635,7 @@ def delete_all_files():
     log_security_event("FILE_DELETE_ALL", "SUCCESSFUL_DELETE_ALL", current_user, "All files deleted successfully")
     return jsonify(message="All files deleted successfully"), 200
 
+# Delete user account
 @app.route('/api/user/delete', methods=['DELETE'])
 @limiter.limit("5 per minute")
 @jwt_required()
@@ -648,7 +649,8 @@ def delete_user():
     if not user:
         log_security_event("USER_DELETE", "USER_NOT_FOUND", current_user, "User not found in database")
         return jsonify(message="User not found"), 404
-   
+    
+    # Delete all data associated with the user including files and sessions
     db.session.delete(user)
     db.session.commit()
 
@@ -726,12 +728,14 @@ def log_security_event(route, event, user_id=None, message=None, extra_data=None
 # Global error handler for exceptions
 @app.errorhandler(Exception)
 def handle_exception(e):
+    # Get the user ID from the JWT if available
     user_id = None
     try:
         user_id = get_jwt_identity()
     except Exception:
         pass
-
+    
+    # Separate handling for rate limit to send a specific response
     if isinstance(e, RateLimitExceeded):
         log_security_event(
             route="GLOBAL",

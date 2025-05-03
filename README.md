@@ -4,7 +4,7 @@
 Register and secure login with OAuth and Authenticator (TOTP) features.\
 Login with Google or GitHub account.\
 Upload and download files that are encrypted in the database.\
-Unit tests for served routes.
+Unit tests for served routes and frontend.
 
 ## Running the application
 
