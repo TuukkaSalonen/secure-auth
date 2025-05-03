@@ -51,6 +51,8 @@ class UserSession(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
+    user = db.relationship('User', backref=db.backref('sessions', lazy=True, cascade="all, delete-orphan"))
+
     access_token = db.Column(db.String(1024), nullable=False)
     refresh_token_jti = db.Column(db.String(36), nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)
@@ -65,7 +67,7 @@ class UploadedFile(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship('User', backref=db.backref('files', lazy=True))
+    user = db.relationship('User', backref=db.backref('files', lazy=True, cascade="all, delete-orphan"))
 
     filename = db.Column(db.String(255), nullable=False)
     mimetype = db.Column(db.String(100), nullable=False)

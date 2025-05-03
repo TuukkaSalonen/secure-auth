@@ -3,6 +3,7 @@ import { useDropzone } from "react-dropzone";
 import {
   uploadFile,
   downloadFile,
+  downloadAllFiles,
   getFiles,
   deleteFile,
   deleteAllFiles,
@@ -68,7 +69,26 @@ const Files: React.FC = () => {
 
   // Handle file download file by ID
   const handleDownload = async (fileId: string) => {
-    await downloadFile(fileId);
+    const result = await downloadFile(fileId);
+    if (!result?.success) {
+      if (result?.message) {
+        toast.error(result.message);
+      } else {
+        toast.error("Failed to download file. Please try again.");
+      }
+    }
+  };
+
+  // Handle file download file by ID
+  const handleDownloadAll = async () => {
+    const result = await downloadAllFiles();
+    if (!result?.success) {
+      if (result?.message) {
+        toast.error(result.message);
+      } else {
+        toast.error("Failed to download files. Please try again.");
+      }
+    }
   };
 
   // Handle file deletion by ID
@@ -210,7 +230,13 @@ const Files: React.FC = () => {
             <>
               <p>Total files: {fileList.length}</p>
               <button
-                className={`${styles.btn} ${styles.btnDeleteAll}`}
+                className={`${styles.btn}`}
+                onClick={() => handleDownloadAll()}
+              >
+                Download All Files
+              </button>
+              <button
+                className={`${styles.btn} ${styles.btnDelete}`}
                 onClick={() => handleDeleteAll()}
               >
                 Delete All Files

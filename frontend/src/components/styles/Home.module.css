@@ -87,3 +87,13 @@ a:hover {
 .logoutBtn {
   margin-top: 24px;
 }
+
+.deleteAccountBtn {
+  margin-top: 24px;
+  background-color: #e53935;
+}
+
+.deleteAccountBtn:hover {
+  background-color: rgb(124, 0, 0);
+  transform: translateY(-2px);
+}

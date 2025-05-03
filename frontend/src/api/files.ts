@@ -65,6 +65,45 @@ export const downloadFile = async (fileId: string) => {
     a.remove();
   } catch (error) {
     console.error("Error downloading file:", error);
+    return { success: false, message: "Error downloading file" };
+  }
+};
+
+// Download all files from the server database
+export const downloadAllFiles = async () => {
+  try {
+    const csrfToken = await getCSRFAccessToken();
+    const response = await fetch(`${API_BASE_URL}/file/download/all`, {
+      method: "GET",
+      headers: {
+        ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+      },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+
+    const contentDisposition = response.headers.get("Content-Disposition");
+
+    const filename = contentDisposition
+      ? contentDisposition
+          .split("filename=")[1]
+          .replace(/(^"|"$)/g, "")
+          .trim()
+      : "downloaded_files";
+
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (error) {
+    console.error("Error downloading file:", error);
+    return { success: false, message: "Error downloading files" };
   }
 };
 

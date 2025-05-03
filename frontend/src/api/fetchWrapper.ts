@@ -1,3 +1,6 @@
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 // Wrap fetch to handle rate limiting
 export const fetchWrapper = async (
   url: string,
@@ -8,7 +11,7 @@ export const fetchWrapper = async (
   if (response.status === 429) {
     const message =
       "Too many requests for this action. Please try again later.";
-    alert(message);
+    toast.error(message);
     throw new Error(message);
   }
   return response;

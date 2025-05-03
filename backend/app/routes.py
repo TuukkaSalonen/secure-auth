@@ -1,7 +1,11 @@
 from datetime import timedelta, datetime, timezone
+import zipfile
 from flask import make_response, jsonify, send_file, redirect, request
 import io
 from flask_jwt_extended import get_csrf_token, decode_token, get_jwt, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
+import traceback
+
+from flask_limiter import RateLimitExceeded
 from . import db
 from . import app 
 from .models import User, UserSession, UploadedFile
@@ -527,6 +531,43 @@ def download_file(file_id):
     log_security_event("FILE_DOWNLOAD", "SUCCESSFUL_DOWNLOAD", current_user, "File downloaded successfully", extra_data={'filename': uploaded_file.filename})
     return response, 200
 
+# Download all files
+@app.route('/api/file/download/all', methods=['GET'])
+@limiter.limit("30 per minute")
+@jwt_required()
+def download_files():
+    current_user = get_jwt_identity()
+    if not current_user:
+        log_security_event("FILE_DOWNLOAD_ALL", "INVALID_USER", current_user, "Invalid user in token")
+        return jsonify(message="Invalid user"), 401
+    
+    # Fetch the user from the database to get their encryption key
+    user = User.query.filter_by(id=current_user).first()
+    if not user:
+        log_security_event("FILE_DOWNLOAD_ALL", "USER_NOT_FOUND", current_user, "User not found in database")
+        return jsonify(message="User not found"), 404
+
+    uploaded_files = UploadedFile.query.filter_by(user_id=current_user).all()
+    if not uploaded_files:
+        log_security_event("FILE_DOWNLOAD_ALL", "FILES_NOT_FOUND", current_user, "Files not found in database")
+        return jsonify(message="File not found"), 404
+    
+    # Create a zip file for all files 
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for uploaded_file in uploaded_files:
+            # Decrypt the file data using the user's encryption key and the file's key and iv
+            decrypted_data = decrypt_file(uploaded_file.encrypted_data, uploaded_file.encrypted_key, uploaded_file.iv_file, uploaded_file.iv_key, user)
+            zip_file.writestr(uploaded_file.filename, decrypted_data)
+
+    zip_buffer.seek(0)    
+    response = make_response(zip_buffer.read())
+    response.headers['Content-Disposition'] = f'attachment; filename={user.username}_files.zip'
+    response.headers['Content-Type'] = 'application/zip'
+
+    log_security_event("FILE_DOWNLOAD_ALL", "SUCCESSFUL_DOWNLOAD", current_user, "File downloaded successfully", extra_data={'filename': uploaded_file.filename})
+    return response, 200
+
 # List all files uploaded by the user
 @app.route('/api/file/list', methods=['GET'])
 @limiter.limit("30 per minute")
@@ -593,6 +634,26 @@ def delete_all_files():
 
     log_security_event("FILE_DELETE_ALL", "SUCCESSFUL_DELETE_ALL", current_user, "All files deleted successfully")
     return jsonify(message="All files deleted successfully"), 200
+
+@app.route('/api/user/delete', methods=['DELETE'])
+@limiter.limit("5 per minute")
+@jwt_required()
+def delete_user():
+    current_user = get_jwt_identity()
+    if not current_user:
+        log_security_event("USER_DELETE", "INVALID_USER", current_user, "Invalid user in token")
+        return jsonify(message="Invalid user"), 401
+    
+    user = User.query.filter_by(id=current_user).first()
+    if not user:
+        log_security_event("USER_DELETE", "USER_NOT_FOUND", current_user, "User not found in database")
+        return jsonify(message="User not found"), 404
+   
+    db.session.delete(user)
+    db.session.commit()
+
+    log_security_event("USER_DELETE", "SUCCESSFUL_DELETE", current_user, "User deleted successfully")
+    return jsonify(message="User deleted successfully"), 200
 
 # Get the JTI from a refresh token
 def get_jti_from_token(token):
@@ -661,3 +722,32 @@ def log_security_event(route, event, user_id=None, message=None, extra_data=None
         "extra_data": extra_data,
     }
     logger.info(log_message)
+
+# Global error handler for exceptions
+@app.errorhandler(Exception)
+def handle_exception(e):
+    user_id = None
+    try:
+        user_id = get_jwt_identity()
+    except Exception:
+        pass
+
+    if isinstance(e, RateLimitExceeded):
+        log_security_event(
+            route="GLOBAL",
+            event="RATE_LIMIT_EXCEEDED",
+            user_id=user_id,
+            message="Rate limit exceeded",
+            extra_data={"error": str(e)}
+        )
+        return jsonify(message="Rate limit exceeded. Please try again later."), 429
+    
+    log_security_event(
+        route="GLOBAL",
+        event="EXCEPTION",
+        user_id=user_id,
+        message="An exception occurred",
+        extra_data={"error": str(e), "traceback": traceback.format_exc()}
+    )
+    # Generic error response
+    return jsonify(message="An unexpected error occurred. Please try again later."), 500

@@ -21,9 +21,3 @@ The frontend runs on port `5173` and the backend on port `5000`.
 In the root directory the tests for both frontend and backend can be run with `npm test`.\
 The backend tests can be run individually in the backend directory using the command `pytest`.\
 The frontend tests can be run individually in the frontend directory using the command `npm test`.
-
-## TODO:
-Add try/catch\
-Check OWASP Top 10\
-Better comments explaining security solution reasons\
-Argumenting security quality in report

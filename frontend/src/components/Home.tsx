@@ -6,6 +6,11 @@ import { RootState } from "../redux/store";
 import { logOut } from "../api/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { deleteUser } from "../api/user";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 // Home component for the application
 const Home: React.FC = () => {
@@ -20,6 +25,38 @@ const Home: React.FC = () => {
   // Handle user logout
   const handleLogOut = async () => {
     await logOut(dispatch);
+  };
+
+  // User account deletion confirmation
+  const handleDeleteAccount = async () => {
+    confirmAlert({
+      title: "Confirm to delete your account",
+      message: "Are you sure you want to delete your account?",
+      buttons: [
+        {
+          label: "Yes",
+          onClick: () => deleteAccount(),
+        },
+        {
+          label: "No",
+        },
+      ],
+    });
+  };
+
+  // Delete user account and handle response
+  const deleteAccount = async () => {
+    const result = await deleteUser();
+    if (result.success) {
+      toast.success(result.message);
+      handleLogOut();
+    } else {
+      if (result.message) {
+        toast.error(result.message);
+      } else {
+        toast.error("Failed to delete account. Please try again.");
+      }
+    }
   };
 
   return (
@@ -45,6 +82,12 @@ const Home: React.FC = () => {
               <Link to="/mfa">
                 <button className={styles.homeLink}>MFA setup</button>
               </Link>
+              <button
+                onClick={handleDeleteAccount}
+                className={`${styles.homeBtn} ${styles.deleteAccountBtn}`}
+              >
+                Delete account
+              </button>
               <button
                 onClick={handleLogOut}
                 className={`${styles.homeBtn} ${styles.logoutBtn}`}
