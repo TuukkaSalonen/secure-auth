@@ -551,6 +551,8 @@ def download_files():
         log_security_event("FILE_DOWNLOAD_ALL", "FILES_NOT_FOUND", current_user, "Files not found in database")
         return jsonify(message="File not found"), 404
     
+    uploaded_file_names = []
+    
     # Create a zip file for all files 
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
@@ -558,13 +560,14 @@ def download_files():
             # Decrypt the file data using the user's encryption key and the file's key and iv
             decrypted_data = decrypt_file(uploaded_file.encrypted_data, uploaded_file.encrypted_key, uploaded_file.iv_file, uploaded_file.iv_key, user)
             zip_file.writestr(uploaded_file.filename, decrypted_data)
+            uploaded_file_names.append(uploaded_file.filename)
 
     zip_buffer.seek(0)    
     response = make_response(zip_buffer.read())
     response.headers['Content-Disposition'] = f'attachment; filename={user.username}_files.zip'
     response.headers['Content-Type'] = 'application/zip'
 
-    log_security_event("FILE_DOWNLOAD_ALL", "SUCCESSFUL_DOWNLOAD", current_user, "File downloaded successfully", extra_data={'filename': uploaded_file.filename})
+    log_security_event("FILE_DOWNLOAD_ALL", "SUCCESSFUL_DOWNLOAD", current_user, "Files downloaded successfully", extra_data={'filename': uploaded_file_names})
     return response, 200
 
 # List all files uploaded by the user

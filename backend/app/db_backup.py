@@ -1,5 +1,4 @@
 import os
-import threading
 from .config import Config 
 from datetime import datetime
 import subprocess
