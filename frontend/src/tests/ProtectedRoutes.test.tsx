@@ -7,6 +7,7 @@ import Files from "../components/Files";
 import Home from "../components/Home";
 import authReducer, { AuthState } from "../redux/authReducer";
 import { Authenticator } from "../components/Authenticator";
+import '@testing-library/jest-dom';
 
 // Test cases for protected routes
 

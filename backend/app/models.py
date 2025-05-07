@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
-from .keyUtils import encrypt_secret_MFA, decrypt_secret_MFA, generate_user_key, decrypt_user_key
+from .utils.keyUtils import encrypt_secret_MFA, decrypt_secret_MFA, generate_user_key, decrypt_user_key
 
 # User model
 class User(db.Model):

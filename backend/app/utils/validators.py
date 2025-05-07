@@ -63,6 +63,8 @@ def validate_file_type(file):
     mimetype = file.mimetype
     extension = os.path.splitext(file.filename)[1].lower()
 
+    print(f"Debug: MIME type = {mimetype}, Extension = {extension}")  # Debug log
+
     allowed_exts = ALLOWED_FILE_TYPES.get(mimetype)
     return allowed_exts and extension in allowed_exts
 
@@ -97,12 +99,13 @@ ALLOWED_FILE_TYPES = {
     "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
     "text/plain": [".txt", ".py", ".js", ".html", ".css", ".ts", ".c", ".cpp", ".java", ".jsx", ".tsx", ".json", ".md", ".xml", ".csv", ".yaml", ".yml", ".sql", ".hs", ".sh", ".bat", ".ini", ".log"],
     "application/zip": [".zip", ".tar", ".gz", ".7z", ".rar"],
+    "text/csv": [".csv"],
     "application/x-tar": [".tar"],
     "application/gzip": [".gz"],
     "application/json": [".json"],
     "application/xml": [".xml"],
     "application/x-yaml": [".yaml", ".yml"],
-    "application/octet-stream": [".bin", ".exe", ".iso"],
+    "application/octet-stream": [".bin", ".exe", ".iso", ".sql", ".hs", ".java", ".py", ".txt", ".c", ".cpp", ".json", ".yaml", ".yml", ".sh", ".bat", ".ini", ".log"],
     "application/x-msdownload": [".exe", ".msi"],
     "application/x-shockwave-flash": [".swf"],
     "application/x-bzip": [".bz2"],

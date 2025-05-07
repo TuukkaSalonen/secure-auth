@@ -63,6 +63,7 @@ export const downloadFile = async (fileId: string) => {
     document.body.appendChild(a);
     a.click();
     a.remove();
+    return { success: true, message: "File downloaded successfully" };
   } catch (error) {
     console.error("Error downloading file:", error);
     return { success: false, message: "Error downloading file" };
@@ -101,6 +102,7 @@ export const downloadAllFiles = async () => {
     document.body.appendChild(a);
     a.click();
     a.remove();
+    return { success: true, message: "Files downloaded successfully" };
   } catch (error) {
     console.error("Error downloading file:", error);
     return { success: false, message: "Error downloading files" };

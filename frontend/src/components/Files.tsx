@@ -188,7 +188,7 @@ const Files: React.FC = () => {
 
   return (
     <div className={styles.filesContainer}>
-      <h1>Files</h1>
+      <h1 style={{marginTop: "0px", marginBottom: "8px"}}>Files</h1>
       <form onSubmit={handleSubmit}>
         <div {...getRootProps()} className={styles.dropzone}>
           <input {...getInputProps()} />
@@ -219,7 +219,7 @@ const Files: React.FC = () => {
         )}
       </form>
 
-      <h2>Uploaded Files</h2>
+      <h2 style={{margin:"8px"}}>Uploaded Files</h2>
       {loading ? (
         <div className={styles.spinnerContainer}>
           <FontAwesomeIcon icon={faSpinner} spin className={styles.spinner} />
@@ -228,7 +228,7 @@ const Files: React.FC = () => {
         <>
           {fileList.length > 0 ? (
             <>
-              <p>Total files: {fileList.length}</p>
+              <p style={{ margin: "0px" }}>Total files: {fileList.length}</p>
               <button
                 className={`${styles.btn}`}
                 onClick={() => handleDownloadAll()}
@@ -241,32 +241,34 @@ const Files: React.FC = () => {
               >
                 Delete All Files
               </button>
-              <ul className={styles.fileList}>
-                {fileList.map((file: FileItem) => (
-                  <li key={file.id} className={styles.fileItem}>
-                    <span>{file.filename}</span>
-                    <span>({formatFileSize(file.file_size)})</span>
-                    <span>
-                      Uploaded at:{" "}
-                      {new Date(file.uploaded_at).toLocaleDateString()}
-                    </span>
-                    <div>
-                      <button
-                        className={styles.btn}
-                        onClick={() => handleDownload(file.id)}
-                      >
-                        Download
-                      </button>
-                      <button
-                        className={`${styles.btn} ${styles.btnDelete}`}
-                        onClick={() => handleDelete(file.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className={styles.scrollableContainer}>
+                <ul className={styles.fileList}>
+                  {fileList.map((file: FileItem) => (
+                    <li key={file.id} className={styles.fileItem}>
+                      <span>{file.filename}</span>
+                      <span>{formatFileSize(file.file_size)}</span>
+                      <span>
+                        Uploaded at:{" "}
+                        {new Date(file.uploaded_at).toLocaleDateString()}
+                      </span>
+                      <div style={{margin: "0px"}}>
+                        <button
+                          className={styles.btn}
+                          onClick={() => handleDownload(file.id)}
+                        >
+                          Download
+                        </button>
+                        <button
+                          className={`${styles.btn} ${styles.btnDelete}`}
+                          onClick={() => handleDelete(file.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </>
           ) : (
             <p>No files uploaded yet.</p>

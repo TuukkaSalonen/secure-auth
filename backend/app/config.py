@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
+import logging
+from logging.handlers import RotatingFileHandler
 
 load_dotenv()
 
@@ -32,6 +34,7 @@ class Config:
     PREFERRED_URL_SCHEME = os.getenv('PREFERRED_URL_SCHEME', 'http')
     SERVER_NAME = os.getenv('SERVER_NAME', 'localhost:5000')
     LOG_FILE = os.getenv('LOG_FILE')
+    BACKUP_DIR = os.getenv('BACKUP_DIR', './backups')
 
 # Content Security Policy
 csp = {
@@ -44,3 +47,14 @@ csp = {
     'frame-src': ["'none'"],
     'object-src': ["'none'"],
 }
+
+# Configure logging
+logger = logging.getLogger('secure_app')
+logger.setLevel(logging.INFO)
+
+rotating_handler = RotatingFileHandler(Config.LOG_FILE, maxBytes=100000, backupCount=5, encoding='utf-8', delay=True)
+rotating_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+
+if not logger.handlers:
+    logger.addHandler(rotating_handler)
+logger.propagate = False

@@ -107,7 +107,7 @@ export const Authenticator: React.FC = () => {
           ) : (
             <>
               <div>
-                <p>Enter your MFA code to disable MFA:</p>
+                <p>Enter your code to disable MFA:</p>
                 <input
                   type="number"
                   value={mfaCode}
@@ -147,6 +147,7 @@ export const Authenticator: React.FC = () => {
                 ) : (
                   <>
                     {qrcode && <img src={qrcode} alt="QR Code" />}
+                    <p>Enter the code:</p>
                     <input
                       type="number"
                       value={mfaCode}

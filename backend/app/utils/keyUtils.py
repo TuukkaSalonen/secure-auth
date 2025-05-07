@@ -1,7 +1,7 @@
 import base64
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from .config import Config
+from ..config import Config
 import os
 
 # Load encryption key for MFA secret and master key from env

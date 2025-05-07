@@ -10,11 +10,11 @@ from . import app
 from .models import User, UserSession, UploadedFile
 import pyotp
 import qrcode
-from .validators import check_login_input, check_mfa_input, check_file_id, validate_file_type
+from .utils.validators import check_login_input, check_mfa_input, check_file_id, validate_file_type
 from . import oauth
 from . import limiter
-from . fileUtils import encrypt_file, decrypt_file
-from app import logger
+from .utils.fileUtils import encrypt_file, decrypt_file
+from .utils.logUtils import log_security_event
 
 # Check if the JWT is valid
 @app.route('/api/check', methods=['GET'])
@@ -713,17 +713,6 @@ def set_redirect_cookies(response, access_token, refresh_token):
     response.set_cookie('refresh_token_cookie', refresh_token, max_age=7*24*60*60, secure=True, httponly=True, samesite='Strict')
     response.set_cookie('csrf_access_token', csrf_access_token, max_age=15*60, secure=True, httponly=False, samesite='Strict')
     response.set_cookie('csrf_refresh_token', csrf_refresh_token, max_age=7*24*60*60, secure=True, httponly=False, samesite='Strict')
-
-# Function to log security events
-def log_security_event(route, event, user_id=None, message=None, extra_data=None):
-    log_message = {
-        "route": route,
-        "event": event,
-        "user_id": user_id,
-        "message": message,
-        "extra_data": extra_data,
-    }
-    logger.info(log_message)
 
 # Global error handler for exceptions
 @app.errorhandler(Exception)

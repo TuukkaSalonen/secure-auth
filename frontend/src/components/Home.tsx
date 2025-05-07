@@ -24,14 +24,19 @@ const Home: React.FC = () => {
 
   // Handle user logout
   const handleLogOut = async () => {
-    await logOut(dispatch);
+    const result = await logOut(dispatch);
+    if (result) {
+      toast.success("Logged out successfully");
+    } else {
+      toast.error("Error during logout.");
+    }
   };
 
   // User account deletion confirmation
   const handleDeleteAccount = async () => {
     confirmAlert({
       title: "Confirm to delete your account",
-      message: "Are you sure you want to delete your account?",
+      message: "Are you sure you want to delete your account? All data will be lost.",
       buttons: [
         {
           label: "Yes",

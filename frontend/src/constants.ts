@@ -67,6 +67,8 @@ export const acceptedFileTypes = {
       ".bat",
       ".ini",
       ".log",
+      ".conf",
+      ".hs",
     ],
 
     // Archives

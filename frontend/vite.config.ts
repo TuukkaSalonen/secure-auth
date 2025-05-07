@@ -16,7 +16,7 @@ export default defineConfig(() => {
             res.setHeader("X-Frame-Options", "DENY");
             res.setHeader("X-Content-Type-Options", "nosniff");
 
-            // Depending on the environment, set different CSP policies.
+            // Set Content Security Policy
             const csp = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';"
 
             res.setHeader("Content-Security-Policy", csp);

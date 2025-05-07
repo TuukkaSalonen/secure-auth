@@ -7,6 +7,7 @@ import Home from "../components/Home";
 import authReducer, { AuthState } from "../redux/authReducer";
 import Login from "../components/Login";
 import Register from "../components/Register";
+import '@testing-library/jest-dom';
 
 // Test cases for unprotected routes (not logged in)
 

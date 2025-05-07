@@ -86,9 +86,11 @@ export const logOut = async (dispatch: AppDispatch) => {
       credentials: "include",
     });
     dispatch(logout());
+    return true;
   } catch (error) {
     console.error("Error logging out:", error);
     dispatch(logout()); // Log out locally even if server request fails
+    return false;
   }
 };
 

@@ -9,9 +9,8 @@ from flask_talisman import Talisman
 from .config import csp
 from .db import db
 from . import session_cleanup
+from . import db_backup
 from authlib.integrations.flask_client import OAuth
-import logging
-from logging.handlers import RotatingFileHandler
 
 # Initialize the app
 app = Flask(__name__)
@@ -27,17 +26,6 @@ jwt = JWTManager(app)
 
 # Initialize OAuth
 oauth = OAuth(app)
-
-# Configure logging
-logger = logging.getLogger('secure_app')
-logger.setLevel(logging.INFO)
-
-rotating_handler = RotatingFileHandler(app.config['LOG_FILE'], maxBytes=100000, backupCount=5, encoding='utf-8', delay=True)
-rotating_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
-
-if not logger.handlers:
-    logger.addHandler(rotating_handler)
-logger.propagate = False
 
 # Register OAuth providers
 oauth.register(
@@ -75,9 +63,13 @@ limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["1000 per day", "200 per hour"],
+    storage_uri="memory://",
 )
 
 # Start the session cleanup scheduler
-session_cleanup.scheduler.start()
+session_cleanup.start_cleanup_scheduler()
+
+# Start the database backup scheduler
+db_backup.start_backup_scheduler()
 
 from . import routes, models
