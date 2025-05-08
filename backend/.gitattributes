@@ -1,0 +1,2 @@
+*.log linguist-language=Text
+*.log.* linguist-language=Text
