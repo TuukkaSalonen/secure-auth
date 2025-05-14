@@ -30,7 +30,7 @@
 
 - DATABASE_URL (**required**, Url for the Postgres database. E.g. ``postgresql://host:port/database``)
 
-###### Required for OAuth login
+##### Required for OAuth login
 - GITHUB_CLIENT_ID (**required** for GitHub OAuth)
 - GITHUB_CLIENT_SECRET (**required** for GitHub OAuth)
 
