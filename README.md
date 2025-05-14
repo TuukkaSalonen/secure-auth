@@ -23,28 +23,35 @@
 ### Environment variables (.env)
 
 #### The following environment variables used in the application
-- FRONTEND_URL (``http://localhost:5173`` as **default**, update if port is changed)
-- DATABASE_URL (**required**, Url for the Postgres database)
 
-- MASTER_KEY (**required** for user key encryption)
-- SECRET_KEY (``secret-key`` as **default** for Flask)
-- JWT_SECRET_KEY (``jwt-secret-key`` as **default** for Flask-JWT-Extended)
-- ENCRYPTION_KEY_MFA (``encryption-key-mfa`` as **default** for user MFA key encryption)
+**You should set your own environment variables even though some default ones are set.**
+
+##### Required
+
+- DATABASE_URL (**required**, Url for the Postgres database. E.g. ``postgresql://host:port/database``)
+
+###### Required for OAuth login
+- GITHUB_CLIENT_ID (**required** for GitHub OAuth)
+- GITHUB_CLIENT_SECRET (**required** for GitHub OAuth)
 
 - GOOGLE_CLIENT_ID (**required** for Google OAuth)
 - GOOGLE_CLIENT_SECRET (**required** for Google OAuth)
-- GOOGLE_REDIRECT_URI (``http://localhost:5000/api/login/google/callback`` as **default** update if port is changed)
 
-- GITHUB_CLIENT_ID (**required** for GitHub OAuth)
-- GITHUB_CLIENT_SECRET (**required** for GitHub OAuth)
+##### Has default but should **change**
+- GOOGLE_REDIRECT_URI (``http://localhost:5000/api/login/google/callback`` as **default** update if port is changed)
 - GITHUB_REDIRECT_URI (``http://localhost:5000/api/login/github/callback`` as **default** update if port is changed)
+
+- FRONTEND_URL (``http://localhost:5173`` as **default**, update if port is changed)
+
+- MASTER_KEY (``Gkqv9Zx8T9W2X3Y4Z5a6b7c8d9e0f1g2h3i4j5k6l7m=`` as **default**, needs to be 32byte url-safe base4 encoded for user key encryption)
+- SECRET_KEY (``secret-key`` as **default** for Flask)
+- JWT_SECRET_KEY (``jwt-secret-key`` as **default** for Flask-JWT-Extended)
+- ENCRYPTION_KEY_MFA (``Gkqv9Zx8T9W2X3Y4Z5a6b7c8d9e0f1g2h3i4j5k6l7m=`` as **default**, needs to be 32byte url-safe base4 encoded for user MFA key encryption)
 
 - PREFERRED_URL_SCHEME (``http`` as **default**)
 
 - LOG_FILE (`./app/logs/app.log` as **default** for log file location, change if you wish)
 - BACKUP_DIR (``./app/backups`` as **default** for db backup directory, change if you wish)
-
-**You should set your own environment variables in addition to the required variables for those that have default values.**
 
 ## Running the application
 
