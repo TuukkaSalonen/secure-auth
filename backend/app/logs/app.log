@@ -307,3 +307,7 @@
 2025-05-14 20:45:43,030 INFO {'route': 'FILE_DOWNLOAD_ALL', 'event': 'SUCCESSFUL_DOWNLOAD', 'user_id': 'cdc9a41e-d9b1-436d-8562-2cdf13bed1b1', 'message': 'Files downloaded successfully', 'extra_data': {'filename': ['test (1).txt', 'Ryhmä_4_tietokanta.pdf']}}
 2025-05-14 20:52:11,287 INFO {'route': 'DB_BACKUP', 'event': 'SCHEDULER_STARTED', 'user_id': None, 'message': 'Backup scheduler started', 'extra_data': None}
 2025-05-14 20:58:26,838 INFO {'route': 'DB_BACKUP', 'event': 'SCHEDULER_STARTED', 'user_id': None, 'message': 'Backup scheduler started', 'extra_data': None}
+2025-05-14 21:01:45,745 INFO {'route': 'DB_BACKUP', 'event': 'SCHEDULER_STARTED', 'user_id': None, 'message': 'Backup scheduler started', 'extra_data': None}
+2025-05-14 21:06:45,745 INFO {'route': 'SESSION_CLEANUP', 'event': 'CLEAR_EXPIRED_SESSIONS', 'user_id': None, 'message': 'Clearing expired sessions', 'extra_data': None}
+2025-05-14 21:11:45,744 INFO {'route': 'SESSION_CLEANUP', 'event': 'CLEAR_EXPIRED_SESSIONS', 'user_id': None, 'message': 'Clearing expired sessions', 'extra_data': None}
+2025-05-14 21:16:45,745 INFO {'route': 'SESSION_CLEANUP', 'event': 'CLEAR_EXPIRED_SESSIONS', 'user_id': None, 'message': 'Clearing expired sessions', 'extra_data': None}

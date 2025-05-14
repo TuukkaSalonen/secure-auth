@@ -22,27 +22,29 @@
 
 ### Environment variables (.env)
 
-#### The following environment variables are required to be set
-- FRONTEND_URL=http://localhost:5173 (update if port is changed)
-- DATABASE_URL (Url for the Postgres database)
+#### The following environment variables used in the application
+- FRONTEND_URL (``http://localhost:5173`` as **default**, update if port is changed)
+- DATABASE_URL (**required**, Url for the Postgres database)
 
-- MASTER_KEY (for user key encryption)
-- SECRET_KEY (for Flask)
-- JWT_SECRET_KEY (for Flask-JWT-Extended)
-- ENCRYPTION_KEY_MFA (for user MFA key encryption)
+- MASTER_KEY (**required** for user key encryption)
+- SECRET_KEY (``secret-key`` as **default** for Flask)
+- JWT_SECRET_KEY (``jwt-secret-key`` as **default** for Flask-JWT-Extended)
+- ENCRYPTION_KEY_MFA (``encryption-key-mfa`` as **default** for user MFA key encryption)
 
-- GOOGLE_CLIENT_ID (for Google OAuth)
-- GOOGLE_CLIENT_SECRET (for Google OAuth)
-- GOOGLE_REDIRECT_URI=http://localhost:5000/api/login/google/callback (update if port is changed)
+- GOOGLE_CLIENT_ID (**required** for Google OAuth)
+- GOOGLE_CLIENT_SECRET (**required** for Google OAuth)
+- GOOGLE_REDIRECT_URI (``http://localhost:5000/api/login/google/callback`` as **default** update if port is changed)
 
-- GITHUB_CLIENT_ID (for GitHub OAuth)
-- GITHUB_CLIENT_SECRET (for GitHub OAuth)
-- GITHUB_REDIRECT_URI=http://localhost:5000/api/login/github/callback (update if port is changed)
+- GITHUB_CLIENT_ID (**required** for GitHub OAuth)
+- GITHUB_CLIENT_SECRET (**required** for GitHub OAuth)
+- GITHUB_REDIRECT_URI (``http://localhost:5000/api/login/github/callback`` as **default** update if port is changed)
 
-- PREFERRED_URL_SCHEME=http
+- PREFERRED_URL_SCHEME (``http`` as **default**)
 
-- LOG_FILE=./app/logs/app.log (log file location, change if you wish)
-- BACKUP_DIR=./app/backups (db backup directory, change if you wish)
+- LOG_FILE (`./app/logs/app.log` as **default** for log file location, change if you wish)
+- BACKUP_DIR (``./app/backups`` as **default** for db backup directory, change if you wish)
+
+**You should set your own environment variables in addition to the required variables for those that have default values.**
 
 ## Running the application
 
