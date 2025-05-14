@@ -272,3 +272,13 @@
 2025-05-07 22:41:50,273 INFO {'route': 'FILE_LIST', 'event': 'SUCCESSFUL_LIST', 'user_id': '9d319caf-ce5f-42fd-832e-b279651d6025', 'message': 'Files listed successfully', 'extra_data': None}
 2025-05-07 22:42:08,884 INFO {'route': 'FILE_DELETE', 'event': 'SUCCESSFUL_DELETE', 'user_id': '9d319caf-ce5f-42fd-832e-b279651d6025', 'message': 'File deleted successfully', 'extra_data': {'file_id': 'e3eaa741-c154-48a8-9295-66c45785bd0f'}}
 2025-05-07 22:42:09,525 INFO {'route': 'FILE_LIST', 'event': 'SUCCESSFUL_LIST', 'user_id': '9d319caf-ce5f-42fd-832e-b279651d6025', 'message': 'Files listed successfully', 'extra_data': None}
+2025-05-14 20:18:45,998 INFO {'route': 'DB_BACKUP', 'event': 'SCHEDULER_STARTED', 'user_id': None, 'message': 'Backup scheduler started', 'extra_data': None}
+2025-05-14 20:23:45,998 INFO {'route': 'SESSION_CLEANUP', 'event': 'CLEAR_EXPIRED_SESSIONS', 'user_id': None, 'message': 'Clearing expired sessions', 'extra_data': None}
+2025-05-14 20:25:38,934 INFO {'route': 'REFRESH_TOKEN', 'event': 'VALID_REFRESH_TOKEN', 'user_id': 'cdc9a41e-d9b1-436d-8562-2cdf13bed1b1', 'message': 'Valid refresh token', 'extra_data': {'mfa_enabled': False}}
+2025-05-14 20:25:41,572 INFO {'route': 'FILE_LIST', 'event': 'SUCCESSFUL_LIST', 'user_id': 'cdc9a41e-d9b1-436d-8562-2cdf13bed1b1', 'message': 'Files listed successfully', 'extra_data': None}
+2025-05-14 20:25:51,611 INFO {'route': 'MFA_SETUP', 'event': 'QR_CODE_GENERATED', 'user_id': 'cdc9a41e-d9b1-436d-8562-2cdf13bed1b1', 'message': 'QR code generated for MFA setup', 'extra_data': None}
+2025-05-14 20:25:57,328 INFO {'route': 'FILE_LIST', 'event': 'SUCCESSFUL_LIST', 'user_id': 'cdc9a41e-d9b1-436d-8562-2cdf13bed1b1', 'message': 'Files listed successfully', 'extra_data': None}
+2025-05-14 20:26:44,380 INFO {'route': 'FILE_LIST', 'event': 'SUCCESSFUL_LIST', 'user_id': 'cdc9a41e-d9b1-436d-8562-2cdf13bed1b1', 'message': 'Files listed successfully', 'extra_data': None}
+2025-05-14 20:26:45,868 INFO {'route': 'FILE_DOWNLOAD', 'event': 'SUCCESSFUL_DOWNLOAD', 'user_id': 'cdc9a41e-d9b1-436d-8562-2cdf13bed1b1', 'message': 'File downloaded successfully', 'extra_data': {'filename': 'Ryhmä_4_tietokanta.pdf'}}
+2025-05-14 20:26:50,342 INFO {'route': 'FILE_DOWNLOAD_ALL', 'event': 'SUCCESSFUL_DOWNLOAD', 'user_id': 'cdc9a41e-d9b1-436d-8562-2cdf13bed1b1', 'message': 'Files downloaded successfully', 'extra_data': {'filename': ['test (1).txt', 'Ryhmä_4_tietokanta.pdf']}}
+2025-05-14 20:27:05,023 INFO {'route': 'LOGOUT', 'event': 'USER_LOGOUT', 'user_id': 'cdc9a41e-d9b1-436d-8562-2cdf13bed1b1', 'message': 'User logged out', 'extra_data': None}

@@ -99,7 +99,7 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: 'frontend/sbom.json, semgrep-report.json, trivy_system.json, zap-wrk/DAST_Report.html', allowEmptyArchive: true
+            archiveArtifacts artifacts: '**/dependency-check-report.xml, frontend/sbom.json, semgrep-report.json, trivy_system.json, zap-wrk/DAST_Report.html', allowEmptyArchive: true
         }
     }
 }
