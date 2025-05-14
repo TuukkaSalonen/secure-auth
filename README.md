@@ -13,6 +13,37 @@
 - Database backup.
 - Security logging.
 
+
+## Requirements 
+
+### Used versions in development
+- Python 3.13.2
+- Node v20.11.1
+
+### Environment variables (.env)
+
+#### The following environment variables are required to be set
+- FRONTEND_URL=http://localhost:5173 (update if port is changed)
+- DATABASE_URL (Url for the Postgres database)
+
+- MASTER_KEY (for user key encryption)
+- SECRET_KEY (for Flask)
+- JWT_SECRET_KEY (for Flask-JWT-Extended)
+- ENCRYPTION_KEY_MFA (for user MFA key encryption)
+
+- GOOGLE_CLIENT_ID (for Google OAuth)
+- GOOGLE_CLIENT_SECRET (for Google OAuth)
+- GOOGLE_REDIRECT_URI=http://localhost:5000/api/login/google/callback (update if port is changed)
+
+- GITHUB_CLIENT_ID (for GitHub OAuth)
+- GITHUB_CLIENT_SECRET (for GitHub OAuth)
+- GITHUB_REDIRECT_URI=http://localhost:5000/api/login/github/callback (update if port is changed)
+
+- PREFERRED_URL_SCHEME=http
+
+- LOG_FILE=./app/logs/app.log (log file location, change if you wish)
+- BACKUP_DIR=./app/backups (db backup directory, change if you wish)
+
 ## Running the application
 
 ### Development environment with hot-reload

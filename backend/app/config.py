@@ -33,7 +33,7 @@ class Config:
     MASTER_KEY = os.getenv('MASTER_KEY')
     PREFERRED_URL_SCHEME = os.getenv('PREFERRED_URL_SCHEME', 'http')
     SERVER_NAME = os.getenv('SERVER_NAME', 'localhost:5000')
-    LOG_FILE = os.getenv('LOG_FILE')
+    LOG_FILE = os.getenv('LOG_FILE', './app/logs/app.log')
     BACKUP_DIR = os.getenv('BACKUP_DIR', './backups')
 
 # Content Security Policy
