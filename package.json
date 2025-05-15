@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "concurrently \"cd ./backend && python run.py runserver\" \"cd ./frontend && npm run dev\"",
     "start": "concurrently \"cd ./backend && python run.py runserver\" \"cd ./frontend && npm run build && npm run preview\"",
-    "test": "cd ./backend && pytest && cd ../frontend && npm test"
+    "test": "cd ./backend && pytest && cd ../frontend && npm test",
+    "install-all": "cd ./backend && pip install -r requirements.txt && cd ../frontend && npm install",
+    "db-init": "cd ./backend && flask db init",
+    "db-migrate": "cd ./backend && flask db migrate",
+    "db-upgrade": "cd ./backend && flask db upgrade"
   },
   "repository": {
     "type": "git",

@@ -24,7 +24,7 @@
 
 #### The following environment variables used in the application
 
-**You should set your own environment variables even though some default ones are set.**
+**You should set your own environment variables in the backend root .env file even though some default ones are set.**
 
 ##### Required
 
@@ -60,6 +60,16 @@ In the root directory, run `npm run dev` to start the application in development
 
 ### Built environment
 In the root directory, run `npm start` to start the application. Similarly as before, both the backend and frontend are started concurrently. However, the frontend built and run in production preview environment. This allows the application to load on Firefox due to having static files. 
+
+### Installing dependencies
+You can install all the required dependencies by running `npm run install-all` in root.
+
+### Initializing db
+The migration directory already exists, but if you want your own, remove it and run `npm run db-init` in root.
+
+To migrate, run `npm run db-migrate` in root.
+
+And to upgrade, run `npm run db-upgrade` in root.
 
 ### Ports
 The frontend runs on port `5173` and the backend on port `5000`.

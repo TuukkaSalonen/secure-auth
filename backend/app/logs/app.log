@@ -342,3 +342,6 @@
 2025-05-14 21:46:06,843 INFO {'route': 'LOGOUT', 'event': 'USER_LOGOUT', 'user_id': 'bc4653e1-2508-440f-b7c2-70845bc6ee2f', 'message': 'User logged out', 'extra_data': None}
 2025-05-14 21:49:03,758 INFO {'route': 'SESSION_CLEANUP', 'event': 'CLEAR_EXPIRED_SESSIONS', 'user_id': None, 'message': 'Clearing expired sessions', 'extra_data': None}
 2025-05-14 21:54:03,759 INFO {'route': 'SESSION_CLEANUP', 'event': 'CLEAR_EXPIRED_SESSIONS', 'user_id': None, 'message': 'Clearing expired sessions', 'extra_data': None}
+2025-05-15 18:33:25,098 INFO {'route': 'DB_BACKUP', 'event': 'SCHEDULER_STARTED', 'user_id': None, 'message': 'Backup scheduler started', 'extra_data': None}
+2025-05-15 18:33:28,666 INFO {'route': 'DB_BACKUP', 'event': 'SCHEDULER_STARTED', 'user_id': None, 'message': 'Backup scheduler started', 'extra_data': None}
+2025-05-15 18:36:06,720 INFO {'route': 'DB_BACKUP', 'event': 'SCHEDULER_STARTED', 'user_id': None, 'message': 'Backup scheduler started', 'extra_data': None}
